@@ -1,0 +1,404 @@
+/* === GLOBAL RESET === */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f5;
+  overflow-x: hidden;
+  width: 100%;
+  padding-top: 50px;
+}
+
+h2 {
+  text-align: center;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* === BLOQUES Y COLUMNA === */
+.bloque {
+  background: #fff;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bloque h3 {
+  margin-bottom: 10px;
+}
+
+.flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.columna {
+  flex: 1;
+  min-width: 250px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === FORMULARIO === */
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.acciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.acciones input[type="file"] {
+  display: inline-block;
+}
+
+.eliminar {
+  background-color: #dc3545;
+}
+
+/* === RESULTADOS === */
+.resultado-general {
+  margin-top: 20px;
+  display: none;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.resultado-individual {
+  flex: 1;
+  text-align: center;
+}
+
+.resultado-individual img {
+  width: 220px;
+  height: 220px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.descripcion {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  text-align: justify;
+}
+
+/* === TABLAS === */
+.tabla-dinamica-container {
+  margin-top: 25px;
+  border-top: 2px solid #ccc;
+  padding-top: 15px;
+}
+
+.tabla-dinamica-container h4 {
+  margin-top: 0;
+}
+
+.table, table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid #999;
+  padding: 6px;
+  text-align: center;
+}
+
+th {
+  background-color: #f5f5f5;
+}
+
+.tabla-dinamica-container input[type="text"] {
+  width: 100%;
+  padding: 4px;
+  border-radius: 3px;
+  border: 1px solid #aaa;
+  font-size: 14px;
+  text-align: center;
+}
+
+.btn-agregar-fila {
+  margin-top: 10px;
+  background-color: #28a745;
+}
+
+.btn-agregar-fila:hover {
+  background-color: #1e7e34;
+}
+
+/* === TEXTOS === */
+.resultado-texto-general, #resultado-texto-general {
+  white-space: pre-wrap;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 20px;
+  font-size: 15px;
+  text-align: justify;
+  box-sizing: border-box;
+  min-height: 150px;
+  width: 100%;
+}
+
+/* === BOTONES DENTRO DE BLOQUES === */
+.bloque button,
+.seccion-resultado button {
+  margin-top: 8px;
+  padding: 6px 12px;
+  border: none;
+  background-color: #1abc9c;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.bloque button:hover,
+.seccion-resultado button:hover {
+  background-color: #148f75;
+}
+
+/* === BARRA INFERIOR DE EXPORTACIÓN === */
+#barra-exportar {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #16a085;
+  padding: 10px;
+  border-radius: 8px;
+  z-index: 9999;
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#barra-exportar button {
+  padding: 8px 14px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#barra-exportar button.pdf-btn { background: #1abc9c; }
+#barra-exportar button.word-btn { background: #2980b9; }
+#barra-exportar button.edit-btn { background: #c0392b; }
+
+#barra-exportar button.pdf-btn:hover { background: #148f75; }
+#barra-exportar button.word-btn:hover { background: #1f5a8a; }
+#barra-exportar button.edit-btn:hover { background: #7e1a16; }
+
+/* === BARRA SUPERIOR === */
+.barra-superior {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #2c3e50;
+  color: white;
+  padding: 10px 20px;
+  z-index: 10000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  margin-top: 100px;
+}
+
+.contenedor-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+}
+
+.barra-superior .logo {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.barra-superior .botones-nav a {
+  color: white;
+  margin-left: 20px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s;
+  white-space: nowrap;
+}
+
+.barra-superior .botones-nav a:hover {
+  color: #1abc9c;
+}
+
+main {
+  margin-top: 70px; /* espacio para barra superior */
+  padding: 0 15px;
+  max-width: 100%;
+  overflow-x: hidden;
+  padding-bottom: 75px;
+}
+
+
+.barra-superior-extra {
+  background-color: #003366; /* color oscuro o el que quieras */
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+  padding: 50px 0; 
+  text-align: center;
+  letter-spacing: 2px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  position: fixed; /* si quieres que quede fijo arriba */
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.floating-pdf-btn {
+  position: fixed;
+  bottom: 80px; /* Altura suficiente para estar justo encima del footer */
+  right: 20px;
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 1100; /* Más alto que el footer */
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+    
+    .floating-pdf-btn:hover {
+      background-color: #45a049;
+    }
+    
+    /* Ocultar secciones por defecto */
+    .seccion-contenido {
+      display: none;
+    }
+    
+    /* Mostrar la sección activa */
+    .seccion-activa {
+      display: block;
+    }
+    
+    /* Estilo para la barra de navegación */
+    .botones-nav a {
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 4px;
+    }
+    
+    .botones-nav a:hover {
+      background-color: #f0f0f0;
+    }
+
+    .footer-personalizado {
+  background-color: #000; /* negro */
+  color: #fff; /* texto blanco */
+  text-align: center;
+  padding: 15px 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+  
+
+  .contenedor-ensayos {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .botones-ensayos {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .boton-ensayo {
+    padding: 15px 20px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+  }
+
+  .boton-ensayo:hover {
+    background-color: #0056b3;
+  }
+
+  .imagen-ensayos {
+    flex: 1;
+    min-width: 300px;
+    text-align: center;
+  }
+
+  .imagen-ensayos img {
+    max-width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }

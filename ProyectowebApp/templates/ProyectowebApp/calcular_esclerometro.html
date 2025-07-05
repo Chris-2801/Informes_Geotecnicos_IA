@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+  <title>Esclerómetro Schmidt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 120px;
+    }
+    .form-container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .valores-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      background: #2c7be5;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 12px;
+      margin-top: 20px;
+      width: 100%;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1a5fc4;
+    }
+    .message {
+      padding: 15px;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+    .error { background: #ffe6e6; color: #c0392b; }
+    .success { background: #e6f7ff; color: #2c3e50; }
+  </style>
+
+  <script>
+    function actualizarCampos() {
+      const metodo = document.getElementById("metodo").value;
+      const contenedor = document.getElementById("valoresContainer");
+      contenedor.innerHTML = "";
+      let cantidad = metodo === "isrm" ? 20 : metodo === "astm" ? 10 : 0;
+
+      for (let i = 0; i < cantidad; i++) {
+        const input = document.createElement("input");
+        input.type = "number";
+        input.name = "valor_" + i;
+        input.step = "any";
+        input.placeholder = "Valor " + (i + 1);
+        contenedor.appendChild(input);
+      }
+    }
+  </script>
+</head>
+<body>
+      <div class="barra-superior-extra">
+      GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
+    </div>
+
+    <!-- BARRA SUPERIOR -->
+    <nav class="barra-superior">
+      <div class="contenedor-nav">
+        <span class="logo">GeoInforme</span>
+        <div class="botones-nav">
+          <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
+        </div>
+      </div>
+    </nav>
+  <div class="form-container">
+    <h2>Esclerómetro Schmidt</h2>
+
+    {% if error %}
+      <div class="message error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <label for="metodo">Método:</label>
+      <select name="metodo" id="metodo" onchange="actualizarCampos()" required>
+        <option value="">-- Seleccione --</option>
+        <option value="isrm">ISRM (1978)</option>
+        <option value="astm">ASTM D5873</option>
+      </select>
+
+      <label for="densidad">Densidad (g/cm³):</label>
+      <input type="number" name="densidad" step="any" required>
+
+      <label>Valores del Esclerómetro:</label>
+      <div id="valoresContainer" class="valores-group"></div>
+
+      <button type="submit">Calcular</button>
+    </form>
+
+    {% if resultado %}
+      <div class="message success">
+        <p><strong>Método:</strong> {{ resultado.metodo }}</p>
+        <p><strong>HR (promedio 10 mayores):</strong> {{ resultado.hr_promedio }}</p>
+        <p><strong>HR (mediana 10 mayores):</strong> {{ resultado.hr_mediana }}</p>
+        <p><strong>Peso específico:</strong> {{ resultado.peso_esp }} kN/m³</p>
+        <p><strong>UCS (media):</strong> {{ resultado.ucs_prom }} MN/m²</p>
+        <p><strong>UCS (mediana):</strong> {{ resultado.ucs_mediana }} MN/m²</p>
+        <p><strong>Módulo de Young (E):</strong> {{ resultado.e }} MPa</p>
+        {% if resultado.valores_usados %}
+          <p><strong>Valores utilizados (10 mayores):</strong> {{ resultado.valores_usados|join:", " }}</p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+    <!-- PIE DE PÁGINA -->
+    <footer class="footer-personalizado">
+      <p>&copy; {{ year|default:"2025" }} GeoInforme — Todos los derechos reservados</p>
+    </footer>
+</body>
+</html>

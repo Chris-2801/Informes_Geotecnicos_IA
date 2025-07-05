@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Registro de Afloramientos y Rocas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+
+    <!-- Librerías externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/svg2pdf.js@1.4.7/dist/svg2pdf.umd.min.js"></script>
+
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+
+  </head>
+  <body>
+
+    <div class="barra-superior-extra">
+      GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
+    </div>
+
+    <!-- BARRA SUPERIOR -->
+    <nav class="barra-superior">
+      <div class="contenedor-nav">
+        <span class="logo">GeoInforme</span>
+        <div class="botones-nav">
+          <a onclick="mostrarSeccion('datos')">Datos</a>
+          <a onclick="mostrarSeccion('afloramientos')">Afloramientos</a>
+          <a onclick="mostrarSeccion('resultados')">Resultados</a>
+          <a onclick="mostrarSeccion('EnsayosLaboratorio')">Cálculo de Ensayos</a>
+        </div>
+      </div>
+    </nav>
+
+    <main>
+      <!-- SECCIÓN DE DATOS -->
+      <section id="datos" class="seccion-contenido seccion-activa">
+        <h2>Registrar Afloramiento y Roca</h2>
+
+        <h3>Datos</h3>
+        <h4>Título del Proyecto</h4>
+        <input type="text" id="titulo-proyecto" placeholder="Ingrese el título del proyecto" style="width: 100%; padding: 8px;" />
+        <h4>Autores</h4>
+        <input type="text" id="autores" placeholder="Nombres de los autores" style="width: 100%; padding: 8px;" />
+
+        <h4>Carrera</h4>
+        <select id="carrera" style="width: 100%; padding: 8px;">
+          <option value="GEOLOGÍA">GEOLOGÍA</option>
+          <option value="MINAS">MINAS</option>
+          <option value="PETRÓLEOS">PETRÓLEOS</option>
+          <option value="AMBIENTAL">AMBIENTAL</option>
+        </select>
+
+        <h4>Materia</h4>
+        <input type="text" id="materia" placeholder="Nombre de la materia" style="width: 100%; padding: 8px;" />
+
+        <h3 style="margin-top: 20px;">Objetivos</h3>
+        <button onclick="generarObjetivos()" style="margin-top: 10px;">Generar Objetivos</button>
+
+        <div id="resultado-objetivos" style="margin-top: 20px; background: #f8f8f8; padding: 15px; border: 1px solid #ccc;">
+          <button onclick="editarTexto('objetivos', this)" style="margin-bottom: 10px;">Editar Objetivos</button>
+          <div id="texto-objetivos"></div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN DE AFLORAMIENTOS -->
+      <section id="afloramientos" class="seccion-contenido">
+        <h2>Afloramientos</h2>
+        <button onclick="añadirBloque()">Añadir Afloramiento/Roca</button>
+        <div id="contenedor"></div>
+      </section>
+
+      <!-- SECCIÓN DE RESULTADOS -->
+      <section id="resultados" class="seccion-contenido">
+        <h2>Resultados</h2>
+
+        <div style="text-align:center; margin-top: 40px;">
+          <button onclick="generarResultadoGeneral()" style="font-size:18px; padding: 12px 20px;">
+            Generar Resultados Generales
+          </button>
+        </div>
+
+        <!-- RESULTADO GENERAL -->
+        <h3 style="margin-top: 20px;">Introducción</h3>
+        <div id="resultado-texto-general" class="resultado-texto-general">
+          <button onclick="editarTexto('general', this)" style="margin-bottom: 10px;">Editar Introducción</button>
+          <div id="texto-general"></div>
+        </div>
+
+        <!-- DISCUSIÓN -->
+        <h3 style="margin-top: 20px;">Discusión</h3>
+        <div id="resultado-discusion" class="resultado-texto-general" style="background: #f0f8ff;">
+          <button onclick="editarTexto('discusion', this)" style="margin-bottom: 10px;">Editar Discusión</button>
+          <div id="texto-discusion"></div>
+        </div>
+
+        <!-- CONCLUSIONES -->
+        <h3 style="margin-top: 20px;">Conclusiones</h3>
+        <div id="resultado-conclusiones" class="resultado-texto-general" style="background: #f0fff0;">
+          <button onclick="editarTexto('conclusiones', this)" style="margin-bottom: 10px;">Editar Conclusiones</button>
+          <div id="texto-conclusiones"></div>
+        </div>
+      </section>
+
+      <!-- SECCIÓN DE ENSAYOS DE LABORATORIO -->
+      <section id="EnsayosLaboratorio" class="seccion-contenido">
+        <h2>Cálculo de Ensayos de Laboratorio</h2>
+        <p>Selecciona el tipo de ensayo que deseas calcular:</p>
+
+        <div class="contenedor-ensayos">
+          <!-- LADO IZQUIERDO: BOTONES -->
+          <div class="botones-ensayos">
+            <a id="btn-esclerometro" href="{% url 'calcular_esclerometro' %}" class="boton-ensayo" title="Ir al cálculo Esclerómetro">
+              Ensayo Esclerómetro
+            </a>
+          </div>
+
+          <!-- LADO DERECHO: IMAGEN -->
+          <div class="imagen-ensayos">
+            <img src="{% static 'img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos" />
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Botón flotante para PDF -->
+    <button class="floating-pdf-btn" onclick="generarPDF()" title="Descargar informe en PDF">PDF</button>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="footer-personalizado">
+      <p>&copy; {{ year|default:"2025" }} GeoInforme — Todos los derechos reservados</p>
+    </footer>
+
+    <!-- Scripts personalizados -->
+    <script src="{% static 'js/GenerarTextoGemini.js' %}"></script>
+    <script src="{% static 'js/GenerarPDF.js' %}"></script>
+    <script src="{% static 'js/Calculos.js' %}"></script>
+
+    <!-- Script final con confirmación y navegación -->
+    <script>
+      // Función para mostrar secciones
+      function mostrarSeccion(seccionId) {
+        document.querySelectorAll('.seccion-contenido').forEach(seccion => {
+          seccion.classList.remove('seccion-activa');
+        });
+        document.getElementById(seccionId).classList.add('seccion-activa');
+        document.getElementById(seccionId).scrollIntoView({ behavior: 'smooth' });
+      }
+
+      // Inicialización
+      window.onload = () => {
+        mostrarSeccion('datos');
+
+        if (!sessionStorage.getItem("reiniciado")) {
+          if (!confirm("¿Deseas reiniciar la página?")) return;
+          sessionStorage.setItem("reiniciado", "true");
+        }
+
+        // Confirmación antes de salir al hacer clic en "Esclerometro"
+        const esclerometroBtn = document.getElementById("btn-esclerometro");
+        if (esclerometroBtn) {
+          esclerometroBtn.addEventListener("click", function (event) {
+            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+            if (!salir) {
+              event.preventDefault();
+            }
+          });
+        }
+      };
+
+      // Funciones ejemplo para añadir/eliminar objetivos específicos (si las usas)
+      function añadirObjetivoEspecifico() {
+        const container = document.getElementById("lista-objetivos-especificos");
+        const index = container.children.length + 1;
+        const div = document.createElement("div");
+        div.className = "objetivo-especifico";
+        div.innerHTML = `
+          <input type="text" name="objetivo-especifico" placeholder="Objetivo específico ${index}" style="width: 90%; padding: 8px;" />
+          <button type="button" onclick="eliminarObjetivo(this)">Eliminar</button>
+        `;
+        container.appendChild(div);
+      }
+
+      function eliminarObjetivo(btn) {
+        btn.parentElement.remove();
+      }
+    </script>
+  </body>
+</html>
+
+
