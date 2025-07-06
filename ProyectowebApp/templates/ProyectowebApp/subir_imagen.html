@@ -146,7 +146,58 @@
     <script src="{% static 'js/GenerarTextoGemini.js' %}"></script>
     <script src="{% static 'js/GenerarPDF.js' %}"></script>
     <script src="{% static 'js/Calculos.js' %}"></script>
+    <scrip>
+      // Función para mostrar secciones
+      function mostrarSeccion(seccionId) {
+        document.querySelectorAll('.seccion-contenido').forEach(seccion => {
+          seccion.classList.remove('seccion-activa');
+        });
+        document.getElementById(seccionId).classList.add('seccion-activa');
+        document.getElementById(seccionId).scrollIntoView({ behavior: 'smooth' });
+      }
 
+      // Inicialización
+      window.onload = () => {
+        mostrarSeccion('datos');
+
+        if (!sessionStorage.getItem("reiniciado")) {
+          if (!confirm("¿Deseas reiniciar la página?")) return;
+          sessionStorage.setItem("reiniciado", "true");
+        }
+
+        // Confirmación antes de salir al hacer clic en "Esclerometro"
+        const esclerometroBtn = document.getElementById("btn-esclerometro");
+        if (esclerometroBtn) {
+          esclerometroBtn.addEventListener("click", function (event) {
+            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+            if (!salir) {
+              event.preventDefault();
+            }
+          });
+        }
+
+        const validacionBtn = document.getElementById("btn-validacion");
+        if (validacionBtn) {
+          validacionBtn.addEventListener("click", function (event) {
+            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+            if (!salir) {
+              event.preventDefault(); // evita que se redirija
+            }
+          });
+        }
+
+        const triaxialBtn = document.getElementById("btn-triaxial");
+        if (triaxialBtn) {
+          triaxialBtn.addEventListener("click", function (event) {
+            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+            if (!salir) {
+              event.preventDefault(); // evita que se redirija
+            }
+          });
+        }
+
+      };
+    </scrip>
   </body>
 </html>
 
