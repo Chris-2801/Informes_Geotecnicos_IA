@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+    <title>Validación Gemini</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 150px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .tab { padding: 10px; cursor: pointer; background: #eee; }
+        .tab.active { background: #4CAF50; color: white; }
+        .tab-content { display: none; padding: 20px; border: 1px solid #ddd; }
+        .tab-content.active { display: block; }
+        textarea { width: 100%; height: 100px; margin-bottom: 10px; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="barra-superior-extra">
+        GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
+      </div>
+
+      <!-- BARRA SUPERIOR -->
+      <nav class="barra-superior">
+        <div class="contenedor-nav">
+          <span class="logo">GeoReport</span>
+          <div class="botones-nav">
+            <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
+          </div>
+        </div>
+      </nav>
+    <div class="container">
+        <h1>Validación de Respuestas</h1>
+        
+        <!-- Pestañas -->
+        <div style="display: flex;">
+            <div class="tab {% if not show_results %}active{% endif %}" 
+                 onclick="document.getElementById('form-tab').classList.add('active'); 
+                          document.getElementById('results-tab').classList.remove('active');
+                          this.classList.add('active'); 
+                          document.querySelector('.tab:not(.active)').classList.remove('active')">
+                Formulario
+            </div>
+            <div class="tab {% if show_results %}active{% endif %}" 
+                 onclick="document.getElementById('results-tab').classList.add('active'); 
+                          document.getElementById('form-tab').classList.remove('active');
+                          this.classList.add('active'); 
+                          document.querySelector('.tab:not(.active)').classList.remove('active')">
+                Resultados
+            </div>
+        </div>
+        
+        <!-- Formulario -->
+        <div id="form-tab" class="tab-content {% if not show_results %}active{% endif %}">
+            <form method="post">
+                {% csrf_token %}
+                {% if error %}<p style="color: red;">{{ error }}</p>{% endif %}
+                
+                <label>Respuesta de Gemini:</label>
+                <textarea name="predicted_text" required>{{ predicted_text|default:"" }}</textarea>
+                
+                <label>Respuesta Esperada:</label>
+                <textarea name="expected_text" required>{{ expected_text|default:"" }}</textarea>
+                
+                <button type="submit">Evaluar</button>
+            </form>
+        </div>
+        
+        <!-- Resultados -->
+        <div id="results-tab" class="tab-content {% if show_results %}active{% endif %}">
+            {% if metrics %}
+                <h3>Resultados:</h3>
+                <p><strong>Respuesta Gemini:</strong> {{ predicted_text }}</p>
+                <p><strong>Respuesta Esperada:</strong> {{ expected_text }}</p>
+                
+                <table>
+                    <tr>
+                        <th>Métrica</th>
+                        <th>Valor</th>
+                        <th>Explicación</th>
+                    </tr>
+                    <tr>
+                        <td>BLEU Score</td>
+                        <td>{{ metrics.bleu_score }}</td>
+                        <td>0 (no similar) - 1 (idéntico)</td>
+                    </tr>
+                    <tr>
+                        <td>ROUGE-L (F1)</td>
+                        <td>{{ metrics.rouge_l }}</td>
+                        <td>0 (no overlap) - 1 (coincidencia perfecta)</td>
+                    </tr>
+                </table>
+            {% else %}
+                <p>No hay resultados para mostrar. Envía el formulario primero.</p>
+            {% endif %}
+        </div>
+    </div>
+    <!-- PIE DE PÁGINA -->
+    <footer class="footer-personalizado">
+      <p>&copy; {{ year|default:"2025" }} GeoInforme — Todos los derechos reservados</p>
+    </footer>
+</body>
+</html>

@@ -90,7 +90,7 @@
     <!-- BARRA SUPERIOR -->
     <nav class="barra-superior">
       <div class="contenedor-nav">
-        <span class="logo">GeoInforme</span>
+        <span class="logo">GeoReport</span>
         <div class="botones-nav">
           <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
         </div>
@@ -137,6 +137,12 @@
       </div>
     {% endif %}
   </div>
+  {% if interpretacion %}
+  <div class="message success" style="margin-top: 30px; white-space: pre-wrap;">
+    <h3>Interpretación generada por IA:</h3>
+    <p>{{ interpretacion }}</p>
+  </div>
+{% endif %}
     <!-- PIE DE PÁGINA -->
     <footer class="footer-personalizado">
       <p>&copy; {{ year|default:"2025" }} GeoInforme — Todos los derechos reservados</p>

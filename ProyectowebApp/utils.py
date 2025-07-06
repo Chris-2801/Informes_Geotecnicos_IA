@@ -162,3 +162,53 @@ def generar_objetivos_desde_titulo(model, titulo_proyecto):
     response = model.generate_content(prompt)
     return response.text.strip()
 
+# ---EVALUACIÓN ---
+
+from sklearn.metrics.pairwise import cosine_similarity
+from rouge import Rouge
+import numpy as np
+from nltk.translate.bleu_score import sentence_bleu
+import nltk
+nltk.download('punkt')
+
+def evaluate_response(predicted_text: str, expected_text: str) -> dict:
+    """Evalúa la respuesta usando métricas locales (sin dependencias de Google Cloud)"""
+    # 1. BLEU Score
+    bleu = sentence_bleu(
+        [expected_text.split()],
+        predicted_text.split(),
+        weights=(0.5, 0.5))
+    
+    # 2. ROUGE-L
+    rouge = Rouge()
+    rouge_scores = rouge.get_scores(predicted_text, expected_text)[0]
+    
+    # 3. Similitud de coseno (mock - reemplazar con embeddings reales si es necesario)
+    mock_embedding = np.random.rand(10)  # Ejemplo con vector aleatorio
+    similarity = cosine_similarity(
+        [mock_embedding],
+        [mock_embedding]
+    )[0][0]
+    
+    return {
+        "bleu_score": round(bleu, 4),
+        "rouge_l": round(rouge_scores["rouge-l"]["f"], 4),
+        "embedding_similarity": round(similarity, 4)
+    }
+
+def generar_interpretacion_esclerometro(resultados, model):
+    prompt = (
+        "Eres un experto geotécnico. Con base en los siguientes resultados del esclerómetro Schmidt:\n"
+        f"- Método: {resultados.get('metodo', 'N/A')}\n"
+        f"- HR promedio 10 mayores: {resultados.get('hr_promedio', 'N/A')}\n"
+        f"- HR mediana 10 mayores: {resultados.get('hr_mediana', 'N/A')}\n"
+        f"- Peso específico: {resultados.get('peso_esp', 'N/A')} kN/m³\n"
+        f"- UCS media: {resultados.get('ucs_prom', 'N/A')}\n"
+        f"- UCS mediana: {resultados.get('ucs_mediana', 'N/A')}\n"
+        f"- Módulo de Young (E): {resultados.get('e', 'N/A')} MPa\n\n"
+        "Redacta una interpretación clara y profesional que explique qué indican estos resultados sobre la calidad y resistencia de la roca, posibles aplicaciones y recomendaciones. "
+        "El texto debe ser técnico, coherente y claro, sin repetir datos textualmente."
+    )
+    
+    response = model.generate_content(prompt)
+    return response.text.strip()

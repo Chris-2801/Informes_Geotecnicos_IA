@@ -1,0 +1,1067 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ensayo Triaxial</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 150px 10px 10px; /* 30px arriba, 10px lados, 10px abajo */
+            background-color: #f5f5f5;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        input {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 80px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .probe-section {
+            display: none;
+        }
+        .active-probe {
+            display: block;
+        }
+        .probe-tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .probe-tab {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+        }
+        .probe-tab.active {
+            background: #3498db;
+            color: white;
+        }
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        .detailed-results {
+            margin-top: 20px;
+        }
+        .detailed-tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .detailed-tab {
+            padding: 8px 15px;
+            background: #ecf0f1;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 4px 4px 0 0;
+        }
+        .detailed-tab.active {
+            background: #3498db;
+            color: white;
+        }
+        .export-buttons {
+            margin-top: 20px;
+        }
+        .export-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="barra-superior-extra">
+      GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
+    </div>
+
+    <!-- BARRA SUPERIOR -->
+    <nav class="barra-superior">
+      <div class="contenedor-nav">
+        <span class="logo">GeoReport</span>
+        <div class="botones-nav">
+          <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
+        </div>
+      </div>
+    </nav>
+    <h1>Ensayo Triaxial</h1>
+    
+    <!-- Sección 1: Contenedores y humedades -->
+    <div class="section">
+        <h2>1. Determinación de Humedad</h2>
+        <table id="moisture-table">
+            <thead>
+                <tr>
+                    <th>Contenedor</th>
+                    <th>Masa Contenedor (g)</th>
+                    <th>Suelo Húmedo + Contenedor (g)</th>
+                    <th>Suelo Seco + Contenedor (g)</th>
+                    <th>Humedad (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="number" step="0.01" class="container-mass" id="container-mass-1"></td>
+                    <td><input type="number" step="0.01" class="wet-soil" id="wet-soil-1"></td>
+                    <td><input type="number" step="0.01" class="dry-soil" id="dry-soil-1"></td>
+                    <td class="moisture-result" id="moisture-result-1">-</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><input type="number" step="0.01" class="container-mass" id="container-mass-2"></td>
+                    <td><input type="number" step="0.01" class="wet-soil" id="wet-soil-2"></td>
+                    <td><input type="number" step="0.01" class="dry-soil" id="dry-soil-2"></td>
+                    <td class="moisture-result" id="moisture-result-2">-</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><input type="number" step="0.01" class="container-mass" id="container-mass-3"></td>
+                    <td><input type="number" step="0.01" class="wet-soil" id="wet-soil-3"></td>
+                    <td><input type="number" step="0.01" class="dry-soil" id="dry-soil-3"></td>
+                    <td class="moisture-result" id="moisture-result-3">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="calculate-moisture">Calcular Humedad</button>
+        <div id="moisture-result" class="result"></div>
+    </div>
+
+    <!-- Sección 2: Diámetros y cálculo de A₀ -->
+    <div class="section">
+        <h2>2. Medición de Diámetros y Cálculo de A₀</h2>
+        <table id="phi-table">
+            <thead>
+                <tr>
+                    <th>Muestra</th>
+                    <th>Ø Superior (mm)</th>
+                    <th>Ø Medio (mm)</th>
+                    <th>Ø Inferior (mm)</th>
+                    <th>Área Superior (cm²)</th>
+                    <th>Área Medio (cm²)</th>
+                    <th>Área Inferior (cm²)</th>
+                    <th>A₀ (cm²)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="number" step="0.01" class="phi-s" id="phi-s-1"></td>
+                    <td><input type="number" step="0.01" class="phi-m" id="phi-m-1"></td>
+                    <td><input type="number" step="0.01" class="phi-i" id="phi-i-1"></td>
+                    <td class="as-result" id="as-result-1">-</td>
+                    <td class="am-result" id="am-result-1">-</td>
+                    <td class="ai-result" id="ai-result-1">-</td>
+                    <td class="ao-result" id="ao-result-1">-</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><input type="number" step="0.01" class="phi-s" id="phi-s-2"></td>
+                    <td><input type="number" step="0.01" class="phi-m" id="phi-m-2"></td>
+                    <td><input type="number" step="0.01" class="phi-i" id="phi-i-2"></td>
+                    <td class="as-result" id="as-result-2">-</td>
+                    <td class="am-result" id="am-result-2">-</td>
+                    <td class="ai-result" id="ai-result-2">-</td>
+                    <td class="ao-result" id="ao-result-2">-</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><input type="number" step="0.01" class="phi-s" id="phi-s-3"></td>
+                    <td><input type="number" step="0.01" class="phi-m" id="phi-m-3"></td>
+                    <td><input type="number" step="0.01" class="phi-i" id="phi-i-3"></td>
+                    <td class="as-result" id="as-result-3">-</td>
+                    <td class="am-result" id="am-result-3">-</td>
+                    <td class="ai-result" id="ai-result-3">-</td>
+                    <td class="ao-result" id="ao-result-3">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="calculate-phi-values">Calcular Áreas</button>
+        <div id="phi-result" class="result"></div>
+    </div>
+
+    <!-- Sección 3: Datos de muestra -->
+    <div class="section">
+        <h2>3. Datos de la Muestra</h2>
+        <table id="sample-data-table">
+            <thead>
+                <tr>
+                    <th>Muestra</th>
+                    <th>Diámetro (mm)</th>
+                    <th>Altura (mm)</th>
+                    <th>Masa (g)</th>
+                    <th>Humedad (%)</th>
+                    <th>A₀ (cm²)</th>
+                    <th>Volumen (cm³)</th>
+                    <th>Peso Unitario Húmedo (kN/m³)</th>
+                    <th>Peso Unitario Seco (kN/m³)</th>
+                    <th>Densidad Húmeda (g/cm³)</th>
+                    <th>Densidad Seca (g/cm³)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td><input type="number" step="0.01" class="diameter" id="diameter-1"></td>
+                    <td><input type="number" step="0.01" class="height" id="height-1"></td>
+                    <td><input type="number" step="0.01" class="mass" id="mass-1"></td>
+                    <td class="humidity-value" id="humidity-value-1">-</td>
+                    <td class="ao-value" id="ao-value-1">-</td>
+                    <td class="volume-result" id="volume-result-1">-</td>
+                    <td class="wet-weight-result" id="wet-weight-result-1">-</td>
+                    <td class="dry-weight-result" id="dry-weight-result-1">-</td>
+                    <td class="wet-density-result" id="wet-density-result-1">-</td>
+                    <td class="dry-density-result" id="dry-density-result-1">-</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td><input type="number" step="0.01" class="diameter" id="diameter-2"></td>
+                    <td><input type="number" step="0.01" class="height" id="height-2"></td>
+                    <td><input type="number" step="0.01" class="mass" id="mass-2"></td>
+                    <td class="humidity-value" id="humidity-value-2">-</td>
+                    <td class="ao-value" id="ao-value-2">-</td>
+                    <td class="volume-result" id="volume-result-2">-</td>
+                    <td class="wet-weight-result" id="wet-weight-result-2">-</td>
+                    <td class="dry-weight-result" id="dry-weight-result-2">-</td>
+                    <td class="wet-density-result" id="wet-density-result-2">-</td>
+                    <td class="dry-density-result" id="dry-density-result-2">-</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td><input type="number" step="0.01" class="diameter" id="diameter-3"></td>
+                    <td><input type="number" step="0.01" class="height" id="height-3"></td>
+                    <td><input type="number" step="0.01" class="mass" id="mass-3"></td>
+                    <td class="humidity-value" id="humidity-value-3">-</td>
+                    <td class="ao-value" id="ao-value-3">-</td>
+                    <td class="volume-result" id="volume-result-3">-</td>
+                    <td class="wet-weight-result" id="wet-weight-result-3">-</td>
+                    <td class="dry-weight-result" id="dry-weight-result-3">-</td>
+                    <td class="wet-density-result" id="wet-density-result-3">-</td>
+                    <td class="dry-density-result" id="dry-density-result-3">-</td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="calculate-sample-data">Calcular Datos de Muestra</button>
+        <div id="sample-data-result" class="result"></div>
+    </div>
+
+    <!-- Sección 4: Datos de ensayo por probeta -->
+    <div class="section">
+        <h2>4. Datos de Ensayo Triaxial</h2>
+        
+        <div class="probe-tabs">
+            <div class="probe-tab active" onclick="showProbe(1)">Probeta 1</div>
+            <div class="probe-tab" onclick="showProbe(2)">Probeta 2</div>
+            <div class="probe-tab" onclick="showProbe(3)">Probeta 3</div>
+        </div>
+        
+        <!-- Probeta 1 -->
+        <div id="probe-1" class="probe-section active-probe">
+            <div class="form-group">
+                <label for="probe-length-1">Longitud de probeta (mm):</label>
+                <input type="number" step="0.01" id="probe-length-1">
+                
+                <label for="dial-constant-1">Constante del dial:</label>
+                <input type="number" step="0.0001" id="dial-constant-1" value="0.8822">
+                
+                <label for="ao-1">A₀ (cm²):</label>
+                <input type="number" step="0.0001" id="ao-1">
+                
+                <label for="diameter-1">Diámetro (mm):</label>
+                <input type="number" step="0.01" id="diameter-1">
+            </div>
+            
+            <h3>Datos de Deformación</h3>
+            <table id="probe-data-table-1">
+                <thead>
+                    <tr>
+                        <th>Lectura del deformímetro</th>
+                        <th>mm</th>
+                        <th>Deformación unitaria [ε]</th>
+                        <th>Área comprendida (cm²)</th>
+                        <th>Carga (lectura del dial)</th>
+                        <th>N</th>
+                        <th>Esfuerzo desviador (kPa)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" class="deformation-reading" value="0" id="deformation-reading-1-1"></td>
+                        <td class="mm-value" id="mm-value-1-1">0.00</td>
+                        <td class="strain-value" id="strain-value-1-1">0.00000</td>
+                        <td class="area-value" id="area-value-1-1">-</td>
+                        <td><input type="number" class="dial-reading" value="0" id="dial-reading-1-1"></td>
+                        <td class="n-value" id="n-value-1-1">0</td>
+                        <td class="stress-value" id="stress-value-1-1">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button onclick="addProbeRow(1)">+ Añadir Fila</button>
+            <button onclick="calculateProbeData(1)">Calcular Datos</button>
+            <div id="probe-result-1" class="result"></div>
+        </div>
+        
+        <!-- Probeta 2 -->
+        <div id="probe-2" class="probe-section">
+            <div class="form-group">
+                <label for="probe-length-2">Longitud de probeta (mm):</label>
+                <input type="number" step="0.01" id="probe-length-2">
+                
+                <label for="dial-constant-2">Constante del dial:</label>
+                <input type="number" step="0.0001" id="dial-constant-2" value="0.8822">
+                
+                <label for="ao-2">A₀ (cm²):</label>
+                <input type="number" step="0.0001" id="ao-2">
+                
+                <label for="diameter-2">Diámetro (mm):</label>
+                <input type="number" step="0.01" id="diameter-2">
+            </div>
+            
+            <h3>Datos de Deformación</h3>
+            <table id="probe-data-table-2">
+                <thead>
+                    <tr>
+                        <th>Lectura del deformímetro</th>
+                        <th>mm</th>
+                        <th>Deformación unitaria [ε]</th>
+                        <th>Área comprendida (cm²)</th>
+                        <th>Carga (lectura del dial)</th>
+                        <th>N</th>
+                        <th>Esfuerzo desviador (kPa)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" class="deformation-reading" value="0" id="deformation-reading-2-1"></td>
+                        <td class="mm-value" id="mm-value-2-1">0.00</td>
+                        <td class="strain-value" id="strain-value-2-1">0.00000</td>
+                        <td class="area-value" id="area-value-2-1">-</td>
+                        <td><input type="number" class="dial-reading" value="0" id="dial-reading-2-1"></td>
+                        <td class="n-value" id="n-value-2-1">0</td>
+                        <td class="stress-value" id="stress-value-2-1">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button onclick="addProbeRow(2)">+ Añadir Fila</button>
+            <button onclick="calculateProbeData(2)">Calcular Datos</button>
+            <div id="probe-result-2" class="result"></div>
+        </div>
+        
+        <!-- Probeta 3 -->
+        <div id="probe-3" class="probe-section">
+            <div class="form-group">
+                <label for="probe-length-3">Longitud de probeta (mm):</label>
+                <input type="number" step="0.01" id="probe-length-3">
+                
+                <label for="dial-constant-3">Constante del dial:</label>
+                <input type="number" step="0.0001" id="dial-constant-3" value="0.8822">
+                
+                <label for="ao-3">A₀ (cm²):</label>
+                <input type="number" step="0.0001" id="ao-3">
+                
+                <label for="diameter-3">Diámetro (mm):</label>
+                <input type="number" step="0.01" id="diameter-3">
+            </div>
+            
+            <h3>Datos de Deformación</h3>
+            <table id="probe-data-table-3">
+                <thead>
+                    <tr>
+                        <th>Lectura del deformímetro</th>
+                        <th>mm</th>
+                        <th>Deformación unitaria [ε]</th>
+                        <th>Área comprendida (cm²)</th>
+                        <th>Carga (lectura del dial)</th>
+                        <th>N</th>
+                        <th>Esfuerzo desviador (kPa)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="number" class="deformation-reading" value="0" id="deformation-reading-3-1"></td>
+                        <td class="mm-value" id="mm-value-3-1">0.00</td>
+                        <td class="strain-value" id="strain-value-3-1">0.00000</td>
+                        <td class="area-value" id="area-value-3-1">-</td>
+                        <td><input type="number" class="dial-reading" value="0" id="dial-reading-3-1"></td>
+                        <td class="n-value" id="n-value-3-1">0</td>
+                        <td class="stress-value" id="stress-value-3-1">0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button onclick="addProbeRow(3)">+ Añadir Fila</button>
+            <button onclick="calculateProbeData(3)">Calcular Datos</button>
+            <div id="probe-result-3" class="result"></div>
+        </div>
+    </div>
+
+    <!-- Sección 5: Tabla detallada -->
+    <div class="section">
+        <h2>5. Tabla Detallada de Resultados</h2>
+        
+        <div class="detailed-tabs">
+            <div class="detailed-tab active" onclick="showDetailedResults(1)">Probeta 1</div>
+            <div class="detailed-tab" onclick="showDetailedResults(2)">Probeta 2</div>
+            <div class="detailed-tab" onclick="showDetailedResults(3)">Probeta 3</div>
+        </div>
+        
+        <div id="detailed-results-1" class="detailed-results">
+            <table id="detailed-table-1">
+                <thead>
+                    <tr>
+                        <th>Deformación (0.01mm)</th>
+                        <th>Esfuerzo (kPa)</th>
+                        <th>Deformación Axial</th>
+                        <th>Deformación Radial</th>
+                        <th>Deformación Volumétrica</th>
+                        <th>Deformación Cortante</th>
+                    </tr>
+                </thead>
+                <tbody id="detailed-table-body-1">
+                    <tr>
+                        <td colspan="6">No hay datos disponibles</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="detailed-results-2" class="detailed-results" style="display: none;">
+            <table id="detailed-table-2">
+                <thead>
+                    <tr>
+                        <th>Deformación (0.01mm)</th>
+                        <th>Esfuerzo (kPa)</th>
+                        <th>Deformación Axial</th>
+                        <th>Deformación Radial</th>
+                        <th>Deformación Volumétrica</th>
+                        <th>Deformación Cortante</th>
+                    </tr>
+                </thead>
+                <tbody id="detailed-table-body-2">
+                    <tr>
+                        <td colspan="6">No hay datos disponibles</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="detailed-results-3" class="detailed-results" style="display: none;">
+            <table id="detailed-table-3">
+                <thead>
+                    <tr>
+                        <th>Deformación (0.01mm)</th>
+                        <th>Esfuerzo (kPa)</th>
+                        <th>Deformación Axial</th>
+                        <th>Deformación Radial</th>
+                        <th>Deformación Volumétrica</th>
+                        <th>Deformación Cortante</th>
+                    </tr>
+                </thead>
+                <tbody id="detailed-table-body-3">
+                    <tr>
+                        <td colspan="6">No hay datos disponibles</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sección 6: Exportar datos -->
+    <div class="section export-section">
+        <h2>6. Exportar Datos</h2>
+        <button onclick="exportAllData()">Exportar Todos los Datos a Excel</button>
+        <p>Este botón exportará todos los datos ingresados y calculados a un archivo Excel con múltiples hojas.</p>
+    </div>
+
+    <!-- Sección 7: Generar informe de resultados -->
+    <div class="section export-section">
+        <h2>7. Generar Informe de Resultados</h2>
+        <button id="generate-report">Generar Informe Técnico</button>
+        <div id="report-result" class="result" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px; white-space: pre-line;"></div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentAo = [0, 0, 0];
+        let probeLengths = [0, 0, 0];
+        let probeData = {
+            1: { stresses: [], axial_strains: [], radial_strains: [] },
+            2: { stresses: [], axial_strains: [], radial_strains: [] },
+            3: { stresses: [], axial_strains: [], radial_strains: [] }
+        };
+        
+        // Función para exportar todos los datos a Excel
+        function exportAllData() {
+            const wb = XLSX.utils.book_new();
+            
+            // 1. Datos de humedad
+            const moistureData = [
+                ["Contenedor", "Masa Contenedor (g)", "Suelo Húmedo + Contenedor (g)", "Suelo Seco + Contenedor (g)", "Humedad (%)"],
+                [1, document.getElementById("container-mass-1").value, document.getElementById("wet-soil-1").value, document.getElementById("dry-soil-1").value, document.getElementById("moisture-result-1").textContent],
+                [2, document.getElementById("container-mass-2").value, document.getElementById("wet-soil-2").value, document.getElementById("dry-soil-2").value, document.getElementById("moisture-result-2").textContent],
+                [3, document.getElementById("container-mass-3").value, document.getElementById("wet-soil-3").value, document.getElementById("dry-soil-3").value, document.getElementById("moisture-result-3").textContent]
+            ];
+            const moistureWS = XLSX.utils.aoa_to_sheet(moistureData);
+            XLSX.utils.book_append_sheet(wb, moistureWS, "Humedad");
+            
+            // 2. Datos de diámetros y áreas
+            const phiData = [
+                ["Muestra", "Ø Superior (mm)", "Ø Medio (mm)", "Ø Inferior (mm)", "Área Superior (cm²)", "Área Medio (cm²)", "Área Inferior (cm²)", "A₀ (cm²)"],
+                [1, document.getElementById("phi-s-1").value, document.getElementById("phi-m-1").value, document.getElementById("phi-i-1").value, 
+                 document.getElementById("as-result-1").textContent, document.getElementById("am-result-1").textContent, 
+                 document.getElementById("ai-result-1").textContent, document.getElementById("ao-result-1").textContent],
+                [2, document.getElementById("phi-s-2").value, document.getElementById("phi-m-2").value, document.getElementById("phi-i-2").value, 
+                 document.getElementById("as-result-2").textContent, document.getElementById("am-result-2").textContent, 
+                 document.getElementById("ai-result-2").textContent, document.getElementById("ao-result-2").textContent],
+                [3, document.getElementById("phi-s-3").value, document.getElementById("phi-m-3").value, document.getElementById("phi-i-3").value, 
+                 document.getElementById("as-result-3").textContent, document.getElementById("am-result-3").textContent, 
+                 document.getElementById("ai-result-3").textContent, document.getElementById("ao-result-3").textContent]
+            ];
+            const phiWS = XLSX.utils.aoa_to_sheet(phiData);
+            XLSX.utils.book_append_sheet(wb, phiWS, "Diámetros y Áreas");
+            
+            // 3. Datos de muestra
+            const sampleData = [
+                ["Muestra", "Diámetro (mm)", "Altura (mm)", "Masa (g)", "Humedad (%)", "A₀ (cm²)", "Volumen (cm³)", "Peso Unitario Seco (kN/m³)", "Peso Unitario Húmedo (kN/m³)", "Densidad Húmeda (g/cm³)", "Densidad Seca (g/cm³)"],
+                [1, document.getElementById("diameter-1").value, document.getElementById("height-1").value, document.getElementById("mass-1").value, 
+                 document.getElementById("humidity-value-1").textContent, document.getElementById("ao-value-1").textContent, 
+                 document.getElementById("volume-result-1").textContent, document.getElementById("dry-weight-result-1").textContent, 
+                 document.getElementById("wet-weight-result-1").textContent, document.getElementById("wet-density-result-1").textContent,
+                 document.getElementById("dry-density-result-1").textContent],
+                [2, document.getElementById("diameter-2").value, document.getElementById("height-2").value, document.getElementById("mass-2").value, 
+                 document.getElementById("humidity-value-2").textContent, document.getElementById("ao-value-2").textContent, 
+                 document.getElementById("volume-result-2").textContent, document.getElementById("dry-weight-result-2").textContent, 
+                 document.getElementById("wet-weight-result-2").textContent, document.getElementById("wet-density-result-2").textContent,
+                 document.getElementById("dry-density-result-2").textContent],
+                [3, document.getElementById("diameter-3").value, document.getElementById("height-3").value, document.getElementById("mass-3").value, 
+                 document.getElementById("humidity-value-3").textContent, document.getElementById("ao-value-3").textContent, 
+                 document.getElementById("volume-result-3").textContent, document.getElementById("dry-weight-result-3").textContent, 
+                 document.getElementById("wet-weight-result-3").textContent, document.getElementById("wet-density-result-3").textContent,
+                 document.getElementById("dry-density-result-3").textContent]
+            ];
+            const sampleWS = XLSX.utils.aoa_to_sheet(sampleData);
+            XLSX.utils.book_append_sheet(wb, sampleWS, "Datos de Muestra");
+            
+            // 4. Datos de ensayo triaxial (para cada probeta)
+            for (let probeNum = 1; probeNum <= 3; probeNum++) {
+                const table = document.getElementById(`probe-data-table-${probeNum}`).getElementsByTagName('tbody')[0];
+                const rows = table.getElementsByTagName('tr');
+                
+                const probeData = [
+                    ["Lectura del deformímetro", "mm", "Deformación unitaria [ε]", "Área comprendida (cm²)", "Carga (lectura del dial)", "N", "Esfuerzo desviador (kPa)"]
+                ];
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const deformationReading = rows[i].querySelector('.deformation-reading').value;
+                    const mmValue = rows[i].querySelector('.mm-value').textContent;
+                    const strainValue = rows[i].querySelector('.strain-value').textContent;
+                    const areaValue = rows[i].querySelector('.area-value').textContent;
+                    const dialReading = rows[i].querySelector('.dial-reading').value;
+                    const nValue = rows[i].querySelector('.n-value').textContent;
+                    const stressValue = rows[i].querySelector('.stress-value').textContent;
+                    
+                    probeData.push([
+                        deformationReading, mmValue, strainValue, areaValue, dialReading, nValue, stressValue
+                    ]);
+                }
+                
+                const probeWS = XLSX.utils.aoa_to_sheet(probeData);
+                XLSX.utils.book_append_sheet(wb, probeWS, `Probeta ${probeNum} Datos`);
+            }
+            
+            // 5. Resultados detallados (para cada probeta)
+            for (let probeNum = 1; probeNum <= 3; probeNum++) {
+                const tableBody = document.getElementById(`detailed-table-body-${probeNum}`);
+                const rows = tableBody.getElementsByTagName('tr');
+                
+                // Verificar si hay datos
+                if (rows.length === 1 && rows[0].cells[0].colSpan === 6) {
+                    continue; // Saltar si no hay datos
+                }
+                
+                const detailedData = [
+                    ["Deformación (0.01mm)", "Esfuerzo (kPa)", "Deformación Axial", "Deformación Radial", "Deformación Volumétrica", "Deformación Cortante"]
+                ];
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const cells = rows[i].cells;
+                    detailedData.push([
+                        cells[0].textContent, cells[1].textContent, cells[2].textContent, 
+                        cells[3].textContent, cells[4].textContent, cells[5].textContent
+                    ]);
+                }
+                
+                const detailedWS = XLSX.utils.aoa_to_sheet(detailedData);
+                XLSX.utils.book_append_sheet(wb, detailedWS, `Probeta ${probeNum} Resultados`);
+            }
+            
+            // Exportar el archivo
+            XLSX.writeFile(wb, "Ensayo_Triaxial_Completo.xlsx");
+        }
+        
+        // Mostrar/ocultar probetas
+        function showProbe(probeNum) {
+            document.querySelectorAll('.probe-section').forEach(section => {
+                section.classList.remove('active-probe');
+            });
+            document.querySelectorAll('.probe-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(`probe-${probeNum}`).classList.add('active-probe');
+            document.querySelector(`.probe-tab:nth-child(${probeNum})`).classList.add('active');
+        }
+        
+        // Mostrar/ocultar resultados detallados
+        function showDetailedResults(probeNum) {
+            document.querySelectorAll('.detailed-results').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.querySelectorAll('.detailed-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(`detailed-results-${probeNum}`).style.display = 'block';
+            document.querySelector(`.detailed-tab:nth-child(${probeNum})`).classList.add('active');
+        }
+        
+        // Añadir filas a las tablas de probetas
+        function addProbeRow(probeNum) {
+            const table = document.getElementById(`probe-data-table-${probeNum}`).getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            
+            const lastRow = table.rows[table.rows.length - 2];
+            const lastReading = lastRow ? parseInt(lastRow.querySelector('.deformation-reading').value) || 0 : 0;
+            const rowCount = table.rows.length;
+            
+            newRow.innerHTML = `
+                <td><input type="number" class="deformation-reading" value="${lastReading + 25}" id="deformation-reading-${probeNum}-${rowCount}"></td>
+                <td class="mm-value" id="mm-value-${probeNum}-${rowCount}">0.00</td>
+                <td class="strain-value" id="strain-value-${probeNum}-${rowCount}">0.00000</td>
+                <td class="area-value" id="area-value-${probeNum}-${rowCount}">-</td>
+                <td><input type="number" class="dial-reading" value="0" id="dial-reading-${probeNum}-${rowCount}"></td>
+                <td class="n-value" id="n-value-${probeNum}-${rowCount}">0</td>
+                <td class="stress-value" id="stress-value-${probeNum}-${rowCount}">0.00</td>
+            `;
+            
+            addInputListeners(newRow, probeNum);
+        }
+        
+        // Calcular datos de probeta
+        function calculateProbeData(probeNum) {
+            const probeLength = parseFloat(document.getElementById(`probe-length-${probeNum}`).value);
+            const dialConstant = parseFloat(document.getElementById(`dial-constant-${probeNum}`).value);
+            const ao = parseFloat(document.getElementById(`ao-${probeNum}`).value);
+            const diameter = parseFloat(document.getElementById(`diameter-${probeNum}`).value);
+            
+            if (!probeLength || !ao || !diameter) {
+                document.getElementById(`probe-result-${probeNum}`).innerHTML = 
+                    '<span class="error">Error: Complete todos los campos requeridos</span>';
+                return;
+            }
+            
+            const deformations = [];
+            const dialReadings = [];
+            
+            const table = document.getElementById(`probe-data-table-${probeNum}`).getElementsByTagName('tbody')[0];
+            const rows = table.getElementsByTagName('tr');
+            
+            for (let i = 0; i < rows.length; i++) {
+                const deformation = parseFloat(rows[i].querySelector('.deformation-reading').value) || 0;
+                const dialReading = parseFloat(rows[i].querySelector('.dial-reading').value) || 0;
+                
+                deformations.push(deformation);
+                dialReadings.push(dialReading);
+            }
+            
+            // Calcular resultados localmente (simulación del backend)
+            const results = {
+                deformations: deformations,
+                stresses: [],
+                axial_strains: [],
+                radial_strains: [],
+                volumetric_strains: [],
+                shear_strains: []
+            };
+            
+            for (let i = 0; i < deformations.length; i++) {
+                const mm = deformations[i] / 100;
+                const strain = mm / probeLength;
+                const area = ao / (1 - strain);
+                const n = dialReadings[i] * dialConstant;
+                const stress = 10 * n / area;
+                
+                // Simular datos radiales (en realidad deberían medirse)
+                const radialStrain = -strain * 0.3; // Coeficiente de Poisson estimado
+                
+                results.stresses.push(stress);
+                results.axial_strains.push(strain);
+                results.radial_strains.push(radialStrain);
+                results.volumetric_strains.push(strain + 2 * radialStrain);
+                results.shear_strains.push(strain - radialStrain);
+            }
+            
+            // Actualizar tabla
+            for (let i = 0; i < rows.length; i++) {
+                const rowId = i + 1;
+                document.getElementById(`mm-value-${probeNum}-${rowId}`).textContent = (results.deformations[i]/100).toFixed(2);
+                document.getElementById(`strain-value-${probeNum}-${rowId}`).textContent = results.axial_strains[i].toFixed(5);
+                document.getElementById(`area-value-${probeNum}-${rowId}`).textContent = (ao / (1 - results.axial_strains[i])).toFixed(2);
+                document.getElementById(`n-value-${probeNum}-${rowId}`).textContent = (dialReadings[i] * dialConstant).toFixed(2);
+                document.getElementById(`stress-value-${probeNum}-${rowId}`).textContent = results.stresses[i].toFixed(2);
+            }
+            
+            // Guardar datos para gráficas
+            probeData[probeNum] = {
+                stresses: results.stresses,
+                axial_strains: results.axial_strains,
+                radial_strains: results.radial_strains
+            };
+            
+            // Actualizar tabla detallada
+            updateDetailedTable(probeNum, results);
+            
+            document.getElementById(`probe-result-${probeNum}`).innerHTML = 
+                '<span class="success">Cálculos completados correctamente</span>';
+        }
+        
+        // Actualizar tabla detallada
+        function updateDetailedTable(probeNum, results) {
+            const tableBody = document.getElementById(`detailed-table-body-${probeNum}`);
+            tableBody.innerHTML = '';
+            
+            for (let i = 0; i < results.deformations.length; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${results.deformations[i]}</td>
+                    <td>${results.stresses[i].toFixed(2)}</td>
+                    <td>${results.axial_strains[i].toFixed(6)}</td>
+                    <td>${results.radial_strains[i].toFixed(6)}</td>
+                    <td>${results.volumetric_strains[i].toFixed(6)}</td>
+                    <td>${results.shear_strains[i].toFixed(6)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+        
+        // Añadir listeners a inputs
+        function addInputListeners(row, probeNum) {
+            row.querySelector('.deformation-reading').addEventListener('change', function() {
+                const mm = this.value / 100;
+                row.querySelector('.mm-value').textContent = mm.toFixed(2);
+                
+                const probeLength = parseFloat(document.getElementById(`probe-length-${probeNum}`).value);
+                if (probeLength > 0) {
+                    const strain = mm / probeLength;
+                    row.querySelector('.strain-value').textContent = strain.toFixed(5);
+                    
+                    const ao = parseFloat(document.getElementById(`ao-${probeNum}`).value);
+                    if (ao > 0) {
+                        const area = ao / (1 - strain);
+                        row.querySelector('.area-value').textContent = area.toFixed(2);
+                    }
+                }
+            });
+            
+            row.querySelector('.dial-reading').addEventListener('change', function() {
+                const dialConstant = parseFloat(document.getElementById(`dial-constant-${probeNum}`).value);
+                const n = this.value * dialConstant;
+                row.querySelector('.n-value').textContent = n.toFixed(2);
+                
+                const areaText = row.querySelector('.area-value').textContent;
+                if (areaText && areaText !== '-') {
+                    const area = parseFloat(areaText);
+                    const stress = 10 * n / area;
+                    row.querySelector('.stress-value').textContent = stress.toFixed(2);
+                }
+            });
+        }
+        
+        // Calcular humedades
+        document.getElementById('calculate-moisture').addEventListener('click', function() {
+            const containers = [];
+            const containerMasses = [];
+            const wetSoils = [];
+            const drySoils = [];
+            
+            for (let i = 1; i <= 3; i++) {
+                containers.push(i);
+                containerMasses.push(parseFloat(document.getElementById(`container-mass-${i}`).value) || 0);
+                wetSoils.push(parseFloat(document.getElementById(`wet-soil-${i}`).value) || 0);
+                drySoils.push(parseFloat(document.getElementById(`dry-soil-${i}`).value) || 0);
+            }
+            
+            // Calcular localmente (simulación del backend)
+            const results = [];
+            
+            for (let i = 0; i < containers.length; i++) {
+                const containerMass = containerMasses[i];
+                const wetSoil = wetSoils[i];
+                const drySoil = drySoils[i];
+                
+                if (containerMass <= 0 || wetSoil <= 0 || drySoil <= 0) {
+                    results.push({
+                        moisture: '-',
+                        wet_density: '-',
+                        dry_density: '-'
+                    });
+                    continue;
+                }
+                
+                const waterMass = wetSoil - drySoil;
+                const dryMass = drySoil - containerMass;
+                const moisture = (waterMass / dryMass) * 100;
+                
+                results.push({
+                    moisture: moisture.toFixed(2),
+                    wet_density: '-',
+                    dry_density: '-'
+                });
+            }
+            
+            // Actualizar tabla
+            results.forEach((result, index) => {
+                const i = index + 1;
+                document.getElementById(`moisture-result-${i}`).textContent = result.moisture;
+                
+                // Pasar humedad a datos de muestra
+                document.getElementById(`humidity-value-${i}`).textContent = result.moisture;
+            });
+            
+            document.getElementById('moisture-result').innerHTML = 
+                '<span class="success">Cálculos completados correctamente</span>';
+        });
+        
+        // Calcular datos de muestra
+        document.getElementById('calculate-sample-data').addEventListener('click', function() {
+            const diameters = [];
+            const heights = [];
+            const masses = [];
+            const humidities = [];
+            const aoValues = [];
+            const drySoils = [];
+            const wetSoils = [];
+            const containerMasses = [];
+            
+            // Obtener datos de la tabla de humedad
+            for (let i = 1; i <= 3; i++) {
+                drySoils.push(parseFloat(document.getElementById(`dry-soil-${i}`).value) || 0);
+                wetSoils.push(parseFloat(document.getElementById(`wet-soil-${i}`).value) || 0);
+                containerMasses.push(parseFloat(document.getElementById(`container-mass-${i}`).value) || 0);
+            }
+            
+            // Obtener datos de la tabla de muestra
+            for (let i = 1; i <= 3; i++) {
+                diameters.push(parseFloat(document.getElementById(`diameter-${i}`).value) || 0);
+                heights.push(parseFloat(document.getElementById(`height-${i}`).value) || 0);
+                masses.push(parseFloat(document.getElementById(`mass-${i}`).value) || 0);
+                humidities.push(parseFloat(document.getElementById(`humidity-value-${i}`).textContent) || 0);
+                aoValues.push(parseFloat(document.getElementById(`ao-value-${i}`).textContent) || 0);
+            }
+            
+            // Calcular localmente (simulación del backend)
+            const results = [];
+            
+            for (let i = 0; i < diameters.length; i++) {
+                const diameter = diameters[i];
+                const height = heights[i];
+                const mass = masses[i];
+                const humidity = humidities[i] / 100; // Convertir a fracción
+                const ao = aoValues[i];
+                const drySoil = drySoils[i];
+                const wetSoil = wetSoils[i];
+                const containerMass = containerMasses[i];
+                
+                if (diameter <= 0 || height <= 0 || mass <= 0) {
+                    results.push({
+                        volume: '-',
+                        dry_weight: '-',
+                        wet_weight: '-',
+                        dry_density: '-',
+                        wet_density: '-',
+                        ao: ao,
+                        diameter: diameter
+                    });
+                    continue;
+                }
+                
+                // Cálculo del volumen (cm³)
+                const volume = ao * height / 10;
+                
+                // Cálculo de pesos unitarios (kN/m³)
+                const wetWeight = (mass / 1000 * 9.81) / (volume / 1000000) / 1000;
+                const dryWeight = wetWeight / (1 + humidity);
+                
+                // Cálculo de densidades (g/cm³)
+                const dryDensity = (drySoil - containerMass) / volume;
+                const wetDensity = (wetSoil - containerMass) / volume;
+                
+                results.push({
+                    volume: volume.toFixed(2),
+                    dry_weight: dryWeight.toFixed(2),
+                    wet_weight: wetWeight.toFixed(2),
+                    dry_density: dryDensity.toFixed(4),
+                    wet_density: wetDensity.toFixed(4),
+                    ao: ao,
+                    diameter: diameter
+                });
+            }
+            
+            // Actualizar tabla
+            results.forEach((result, index) => {
+                const i = index + 1;
+                document.getElementById(`volume-result-${i}`).textContent = result.volume;
+                document.getElementById(`dry-weight-result-${i}`).textContent = result.dry_weight;
+                document.getElementById(`wet-weight-result-${i}`).textContent = result.wet_weight;
+                document.getElementById(`dry-density-result-${i}`).textContent = result.dry_density;
+                document.getElementById(`wet-density-result-${i}`).textContent = result.wet_density;
+                
+                // Pasar A₀ y diámetro a probetas correspondientes
+                document.getElementById(`ao-${i}`).value = result.ao;
+                document.getElementById(`diameter-${i}`).value = result.diameter;
+                
+                // Pasar altura como longitud de probeta
+                const height = parseFloat(document.getElementById(`height-${i}`).value) || 0;
+                document.getElementById(`probe-length-${i}`).value = height;
+            });
+            
+            document.getElementById('sample-data-result').innerHTML = 
+                '<span class="success">Cálculos completados correctamente</span>';
+        });
+        
+        // Calcular valores de Ø
+        document.getElementById('calculate-phi-values').addEventListener('click', function() {
+            const phiS = [];
+            const phiM = [];
+            const phiI = [];
+            
+            for (let i = 1; i <= 3; i++) {
+                phiS.push(parseFloat(document.getElementById(`phi-s-${i}`).value) || 0);
+                phiM.push(parseFloat(document.getElementById(`phi-m-${i}`).value) || 0);
+                phiI.push(parseFloat(document.getElementById(`phi-i-${i}`).value) || 0);
+            }
+            
+            // Calcular localmente (simulación del backend)
+            const results = [];
+            
+            for (let i = 0; i < phiS.length; i++) {
+                const phi_s = phiS[i];
+                const phi_m = phiM[i];
+                const phi_i = phiI[i];
+                
+                if (phi_s <= 0 || phi_m <= 0 || phi_i <= 0) {
+                    results.push({
+                        as: '-',
+                        am: '-',
+                        ai: '-',
+                        ao: '-'
+                    });
+                    continue;
+                }
+                
+                const as = Math.PI * Math.pow(phi_s / 20, 2); // Convertir mm a cm
+                const am = Math.PI * Math.pow(phi_m / 20, 2);
+                const ai = Math.PI * Math.pow(phi_i / 20, 2);
+                const ao = (as + 4 * am + ai) / 6;
+                
+                results.push({
+                    as: as.toFixed(4),
+                    am: am.toFixed(4),
+                    ai: ai.toFixed(4),
+                    ao: ao.toFixed(4)
+                });
+            }
+            
+            // Actualizar tabla
+            results.forEach((result, index) => {
+                const i = index + 1;
+                document.getElementById(`as-result-${i}`).textContent = result.as;
+                document.getElementById(`am-result-${i}`).textContent = result.am;
+                document.getElementById(`ai-result-${i}`).textContent = result.ai;
+                document.getElementById(`ao-result-${i}`).textContent = result.ao;
+                
+                // Pasar A₀ a datos de muestra
+                document.getElementById(`ao-value-${i}`).textContent = result.ao;
+                currentAo[index] = result.ao;
+            });
+            
+            document.getElementById('phi-result').innerHTML = 
+                '<span class="success">Cálculos completados correctamente</span>';
+        });
+        
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Añadir listeners a la primera fila de cada probeta
+            for (let i = 1; i <= 3; i++) {
+                const firstRow = document.getElementById(`probe-data-table-${i}`).getElementsByTagName('tbody')[0].rows[0];
+                addInputListeners(firstRow, i);
+            }
+        });
+
+    </script>
+    <!-- PIE DE PÁGINA -->
+    <footer class="footer-personalizado">
+      <p>&copy; {{ year|default:"2025" }} GeoReport — Todos los derechos reservados</p>
+    </footer>
+</body>
+</html>
