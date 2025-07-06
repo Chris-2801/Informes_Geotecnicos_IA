@@ -83,20 +83,20 @@
   </script>
 </head>
 <body>
-      <div class="barra-superior-extra">
-      GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
-    </div>
-
-    <!-- BARRA SUPERIOR -->
-    <nav class="barra-superior">
-      <div class="contenedor-nav">
-        <span class="logo">GeoReport</span>
-        <div class="botones-nav">
-          <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
-        </div>
+    <div class="barra-superior-extra">
+        GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA
       </div>
-    </nav>
-  <div class="form-container">
+
+      <!-- BARRA SUPERIOR -->
+      <nav class="barra-superior">
+        <div class="contenedor-nav">
+          <span class="logo">GeoReport</span>
+          <div class="botones-nav">
+            <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
+          </div>
+        </div>
+      </nav>
+    <div class="form-container">
     <h2>Esclerómetro Schmidt</h2>
 
     {% if error %}
