@@ -4,6 +4,7 @@ from google.api_core.exceptions import GoogleAPIError
 
 # Lista de claves API
 API_KEYS = [
+    "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA",
     "AIzaSyDLZ6sGa-mzaLI9H_v2A4JddzaErK1Rc48",
     "AIzaSyAA2VJ8wrZRDaEN_AuWx_yZrfExkSOrido",  #silviayesse2016
     "AIzaSyD9mMBzYnOsE69YZv-bZHWCUrSP26dNstI",
