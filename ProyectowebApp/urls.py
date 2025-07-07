@@ -23,6 +23,8 @@ urlpatterns = [
     # URLs para probetas (con parámetro probe_num)
     path('calculate_probe_data/<int:probe_num>/', views.calculate_probe_data, name='calculate_probe_data'),
     path('get_detailed_table/<int:probe_num>/', views.get_detailed_table, name='get_detailed_table'),
+
+    path("estado_apis/", views.estado_apis, name="estado_apis"),
 ]
 
 # Esto permitirá que Django sirva archivos de medios durante el desarrollo (cuando DEBUG=True)

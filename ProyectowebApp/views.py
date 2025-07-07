@@ -27,19 +27,11 @@ from .utils import (
     generar_conclusiones,
     generar_objetivos_desde_titulo,
     configurar_genai,
-    generar_interpretacion_esclerometro
 )
-
-# Configuramos el modelo global solo una vez al cargar el módulo
-try:
-    model = configurar_genai()
-except Exception as e:
-    model = None
-    print("Error configurando modelo Gemini:", e)
-
 
 def subir_imagen(request):
     if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        model = configurar_genai()
         if model is None:
             return JsonResponse({"error": "Modelo no configurado correctamente."}, status=500)
 
@@ -144,6 +136,7 @@ def crear_estereograma(orientaciones):
 @csrf_exempt
 def generar_resultado(request):
     if request.method == "POST":
+        model = configurar_genai()
         if model is None:
             return JsonResponse({"error": "Modelo no configurado correctamente."}, status=500)
 
@@ -166,6 +159,7 @@ def generar_resultado(request):
 
 def generar_objetivos(request):
     if request.method == "POST":
+        model = configurar_genai()
         try:
             data = json.loads(request.body)
             titulo = data.get("titulo")
@@ -198,10 +192,8 @@ model = genai.GenerativeModel("gemini-1.5-flash")
 
 def calcular_esclerometro(request):
     if request.method == "POST":
-        from .utils import configurar_genai, generar_interpretacion_esclerometro
-        import math, statistics
 
-        model = configurar_genai()  # 👈 obtiene el modelo activo
+        model = configurar_genai()
 
         metodo = request.POST.get("metodo")
         densidad_str = request.POST.get("densidad")
@@ -522,3 +514,24 @@ def validacion_view(request):
         })
     
     return render(request, "ProyectowebApp/Validacion.html", {"show_results": False})
+
+def estado_apis(request):
+    estados = configurar_genai()
+    return JsonResponse({"estados": estados, "claves": [api["clave"] for api in estados if api["estado"] == "Válida"]})
+
+from .utils import obtener_modelo_por_indice
+
+@csrf_exempt
+def generar_resultado(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            prompt = data.get("prompt")
+            api_index = int(data.get("api_index", 0))
+
+            model = obtener_modelo_por_indice(api_index)
+            response = model.generate_content(prompt)
+
+            return JsonResponse({"resultado": response.text})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
