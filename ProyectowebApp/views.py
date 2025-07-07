@@ -515,10 +515,6 @@ def validacion_view(request):
     
     return render(request, "ProyectowebApp/Validacion.html", {"show_results": False})
 
-def estado_apis(request):
-    estados = configurar_genai()
-    return JsonResponse({"estados": estados, "claves": [api["clave"] for api in estados if api["estado"] == "Válida"]})
-
 from .utils import obtener_modelo_por_indice
 
 @csrf_exempt
