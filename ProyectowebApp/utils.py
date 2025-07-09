@@ -12,12 +12,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 API_KEYS = [
-    os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
-    os.getenv("GEMINI_API_KEY_2", "AIzaSyDLZ6sGa-mzaLI9H_v2A4JddzaErK1Rc48"),
+    os.getenv("GEMINI_API_KEY_5", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
     os.getenv("GEMINI_API_KEY_1", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
+    os.getenv("GEMINI_API_KEY_2", "AIzaSyDLZ6sGa-mzaLI9H_v2A4JddzaErK1Rc48"),
     os.getenv("GEMINI_API_KEY_3", "AIzaSyAA2VJ8wrZRDaEN_AuWx_yZrfExkSOrido"),
     os.getenv("GEMINI_API_KEY_4", "AIzaSyD9mMBzYnOsE69YZv-bZHWCUrSP26dNstI"),
-    os.getenv("GEMINI_API_KEY_5", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
+    os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
 ]
 
 def configurar_genai():
