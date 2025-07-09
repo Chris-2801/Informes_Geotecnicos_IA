@@ -104,7 +104,7 @@
             <a id="btn-triaxial" href="{% url 'Triaxial' %}" class="boton-ensayo">Ensayo Triaxial</a>
           </div>
           <div class="imagen-ensayos">
-            <img src="{% static 'img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos" />
+            <img src="{% static 'Img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos" />
           </div>
         </div>
       </section>
@@ -146,36 +146,6 @@
           }
         });
       };
-
-      // Mostrar estado y selector de APIs
-      document.addEventListener("DOMContentLoaded", function () {
-        fetch("/estado_apis/")
-          .then(response => response.json())
-          .then(data => {
-            const tbody = document.querySelector("#tabla-api-keys tbody");
-            const select = document.getElementById("api-key-select");
-            tbody.innerHTML = "";
-            select.innerHTML = "";
-
-            data.estados.forEach((api, index) => {
-              const alias = `API KEY ${index + 1}`;
-              const fila = document.createElement("tr");
-              fila.innerHTML = `
-                <td>${alias}</td>
-                <td style="color:${api.estado === "Válida" ? "green" : "red"}">${api.estado}</td>
-                <td>${api.error || ""}</td>
-              `;
-              tbody.appendChild(fila);
-
-              const option = document.createElement("option");
-              option.value = index;  // usamos el índice como valor
-              option.textContent = alias;
-              option.disabled = api.estado !== "Válida";
-              select.appendChild(option);
-            });
-          })
-          .catch(error => console.error("Error al obtener estados de API:", error));
-      });
 
       // Obtener CSRF token
       function getCookie(name) {

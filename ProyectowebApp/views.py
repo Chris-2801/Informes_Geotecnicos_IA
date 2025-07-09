@@ -1,33 +1,20 @@
-import uuid
-import json
-import io
-import base64
-import re
-import math
-import json
+import io, re, os, uuid, json, math, base64, statistics, matplotlib
 
 from django.shortcuts import render
 from django.http import JsonResponse
-
-from django.shortcuts import render
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import mplstereonet
+matplotlib.use('Agg')
 
-from .utils import (
-    describir_imagen_por_tipo,
-    generar_informe_general,
-    generar_discusion,
-    generar_conclusiones,
-    generar_objetivos_desde_titulo,
-    configurar_genai,
-)
+from .utils import (describir_imagen_por_tipo, generar_informe_general, generar_discusion, generar_conclusiones, generar_objetivos_desde_titulo,
+    configurar_genai, generar_interpretacion_esclerometro, evaluate_response)
+
+@csrf_exempt
+
+# -- GENERACIÓN DE TEXTO CON GEMINI ---
 
 def subir_imagen(request):
     if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -59,7 +46,97 @@ def subir_imagen(request):
 
     return render(request, "ProyectowebApp/subir_imagen.html")
 
-@csrf_exempt
+def generar_objetivos(request, return_html=False):
+    if request.method == "POST":
+        model = configurar_genai()
+        try:
+            if return_html:
+                titulo = request.POST.get("titulo")  # Si es HTML, los datos vienen en POST
+            else:
+                data = json.loads(request.body)      # Si es JSON, se parsea el body
+                titulo = data.get("titulo")
+
+            if not titulo:
+                if return_html:
+                    return render(request, "ProyectowebApp/subir_imagen.html", {
+                        "error": "No se recibió el título del proyecto."
+                    })
+                else:
+                    return JsonResponse({"error": "No se recibió el título del proyecto."}, status=400)
+
+            objetivos = generar_objetivos_desde_titulo(model, titulo)
+
+            if return_html:
+                return render(request, "ProyectowebApp/subir_imagen.html", {
+                    "objetivos": objetivos
+                })
+            else:
+                return JsonResponse({"objetivos": objetivos})
+
+        except Exception as e:
+            if return_html:
+                return render(request, "ProyectowebApp/subir_imagen.html", {
+                    "error": f"Error al generar objetivos: {str(e)}"
+                })
+            else:
+                return JsonResponse({"error": f"Error al generar objetivos: {str(e)}"}, status=500)
+
+    if return_html:
+        return render(request, "ProyectowebApp/subir_imagen.html")
+    else:
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+
+def generar_resultado(request, return_html=False):
+    if request.method == "POST":
+        model = configurar_genai()
+        if model is None:
+            if return_html:
+                return render(request, "ProyectowebApp/subir_imagen.html", {
+                    "error": "Modelo no configurado correctamente."
+                })
+            else:
+                return JsonResponse({"error": "Modelo no configurado correctamente."}, status=500)
+
+        try:
+            if return_html:
+                bloques = request.POST.get("bloques", "").split(",")  # Ejemplo: ajusta según tu formulario
+            else:
+                data = json.loads(request.body)
+                bloques = data.get("bloques", [])
+
+            resultado = generar_informe_general(bloques, model)
+            discusion = generar_discusion(bloques, model)
+            conclusiones = generar_conclusiones(bloques, model)
+
+            if return_html:
+                return render(request, "ProyectowebApp/subir_imagen.html", {
+                    "resultado": resultado,
+                    "discusion": discusion,
+                    "conclusiones": conclusiones,
+                })
+            else:
+                return JsonResponse({
+                    "resultado": resultado,
+                    "discusion": discusion,
+                    "conclusiones": conclusiones,
+                })
+
+        except Exception as e:
+            if return_html:
+                return render(request, "ProyectowebApp/subir_imagen.html", {
+                    "error": f"Error generando secciones del informe: {str(e)}"
+                })
+            else:
+                return JsonResponse({"error": f"Error generando secciones del informe: {str(e)}"}, status=500)
+
+    if return_html:
+        return render(request, "ProyectowebApp/subir_imagen.html")
+    else:
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+# -- ESTEREOGRAMA ---
+
 def generar_estereograma(request):
     if request.method == "POST":
         try:
@@ -133,62 +210,7 @@ def crear_estereograma(orientaciones):
     img_base64 = base64.b64encode(buf.read()).decode("utf-8")
     return f"data:image/png;base64,{img_base64}"
 
-@csrf_exempt
-def generar_resultado(request):
-    if request.method == "POST":
-        model = configurar_genai()
-        if model is None:
-            return JsonResponse({"error": "Modelo no configurado correctamente."}, status=500)
-
-        try:
-            data = json.loads(request.body)
-            bloques = data.get("bloques", [])
-            resultado = generar_informe_general(bloques, model)
-            discusion = generar_discusion(bloques, model)
-            conclusiones = generar_conclusiones(bloques, model)
-
-            return JsonResponse({
-                "resultado": resultado,
-                "discusion": discusion,
-                "conclusiones": conclusiones,
-            })
-        except Exception as e:
-            return JsonResponse({"error": f"Error generando secciones del informe: {str(e)}"}, status=500)
-
-    return JsonResponse({"error": "Método no permitido"}, status=405)  
-
-def generar_objetivos(request):
-    if request.method == "POST":
-        model = configurar_genai()
-        try:
-            data = json.loads(request.body)
-            titulo = data.get("titulo")
-            if not titulo:
-                return JsonResponse({"error": "No se recibió el título del proyecto."}, status=400)
-            objetivos = generar_objetivos_desde_titulo(model, titulo)
-            return JsonResponse({"objetivos": objetivos})
-        except Exception as e:
-            return JsonResponse({"error": f"Error al generar objetivos: {str(e)}"}, status=500)
-    return JsonResponse({"error": "Método no permitido"}, status=405)
-
-from django.shortcuts import render
-import math
-import statistics
-from django.shortcuts import render
-from django.http import JsonResponse
-import json
-import math
-
-import os
-import math
-import statistics
-from django.shortcuts import render
-from .utils import generar_interpretacion_esclerometro  # <-- IMPORTA TU FUNCIÓN
-import google.generativeai as genai
-
-# Configura Gemini una vez
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+# -- ENSAYO ESCLERÓMETRO ---
 
 def calcular_esclerometro(request):
     if request.method == "POST":
@@ -257,15 +279,7 @@ def calcular_esclerometro(request):
 
     return render(request, "ProyectowebApp/calcular_esclerometro.html")
 
-import json
-import math
-from django.http import JsonResponse
-from django.shortcuts import render
-
-from django.shortcuts import render
-from django.http import JsonResponse
-import json
-import math
+# -- ENSAYO TRIAXIAL ---
 
 def triaxial_view(request):
     return render(request, 'ProyectowebApp/Triaxial.html')
@@ -491,9 +505,6 @@ def get_detailed_table(request, probe_num):
 
 # -- EVALUACIÓN GEMINI ---
 
-from django.shortcuts import render
-from .utils import evaluate_response
-
 def validacion_view(request):
     if request.method == "POST":
         predicted_text = request.POST.get("predicted_text", "")
@@ -514,20 +525,3 @@ def validacion_view(request):
         })
     
     return render(request, "ProyectowebApp/Validacion.html", {"show_results": False})
-
-from .utils import obtener_modelo_por_indice
-
-@csrf_exempt
-def generar_resultado(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            prompt = data.get("prompt")
-            api_index = int(data.get("api_index", 0))
-
-            model = obtener_modelo_por_indice(api_index)
-            response = model.generate_content(prompt)
-
-            return JsonResponse({"resultado": response.text})
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)

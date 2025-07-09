@@ -1,48 +1,48 @@
-import os
-import logging
+import os, logging, nltk
 import google.generativeai as genai
 from google.api_core.exceptions import GoogleAPIError
 from sklearn.metrics.pairwise import cosine_similarity
-from rouge import Rouge
-import numpy as np
 from nltk.translate.bleu_score import sentence_bleu
-import nltk
+from rouge import Rouge
 
-# Configuración inicial
+# -- CONFIGURACIÓN API Y MODELO GEMINI ---
+
 nltk.download('punkt')
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuración segura de API Keys (usar variables de entorno en producción)
 API_KEYS = [
-    os.getenv("GEMINI_API_KEY_1", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
+    os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
     os.getenv("GEMINI_API_KEY_2", "AIzaSyDLZ6sGa-mzaLI9H_v2A4JddzaErK1Rc48"),
+    os.getenv("GEMINI_API_KEY_1", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
     os.getenv("GEMINI_API_KEY_3", "AIzaSyAA2VJ8wrZRDaEN_AuWx_yZrfExkSOrido"),
     os.getenv("GEMINI_API_KEY_4", "AIzaSyD9mMBzYnOsE69YZv-bZHWCUrSP26dNstI"),
     os.getenv("GEMINI_API_KEY_5", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
-    os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
 ]
 
 def configurar_genai():
     """Configura las API Keys y devuelve el primer modelo válido encontrado"""
     estados_api = []
+
     for api_key in API_KEYS:
         try:
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel("gemini-1.5-flash")
             response = model.generate_content("ping")
             if response.text:
-                # Devuelve el primer modelo válido que encuentre
+                print(f"[✔] Clave válida usada: {api_key[:10]}...{api_key[-10:]}")
                 return model
         except Exception as e:
+            # Sigue intentando si hay error
             estados_api.append({
                 "clave": api_key[:10] + "..." + api_key[-10:],
                 "estado": "Inválida",
                 "error": str(e)
             })
-    
-    # Si ninguna API funcionó, levanta una excepción
-    raise RuntimeError("Ninguna API Key funcionó. Estados: " + str(estados_api))
+            continue
+
+    # Si ninguna API funcionó, lanza un error
+    raise RuntimeError("❌ Ninguna API Key funcionó. Estados: " + str(estados_api))
 
 def obtener_modelo_por_indice(api_index):
     """Obtiene un modelo configurado con una API Key específica."""
@@ -72,6 +72,8 @@ def obtener_modelo_por_indice(api_index):
     except Exception as e:
         logger.error(f"Error general al configurar la API: {str(e)}")
         raise RuntimeError(f"Error general al configurar la API: {str(e)}") from e
+
+# -- CONFIGURACIÓN API Y MODELO IMÁGENES ---
 
 def describir_imagen(image_path, prompt, model):
     """Describe una imagen usando el modelo proporcionado."""
@@ -103,25 +105,55 @@ def describir_imagen_por_tipo(image_path, tipo, model):
             
         if tipo == "afloramiento":
             prompt = (
-                "Describe en un solo párrafo, con aproximadamente 100 palabras, "
-                "el afloramiento geológico visible en la imagen desde un punto de vista geotécnico. "
-                "Incluye características como la estructura, fracturamiento, estabilidad, tipos de discontinuidades, "
-                "orientación, posibles riesgos de deslizamientos o fallas, propiedades mecánicas visibles, "
-                "y cualquier otro aspecto relevante para la ingeniería geotécnica. "
-                "El texto debe ser técnico, claro y fluido, sin enumeraciones, formando un párrafo continuo."
+                "Redacta un párrafo técnico y coherente (alrededor de 100 palabras) que describa el afloramiento geológico visible en la imagen, "
+                "desde una perspectiva geotécnica. Analiza la estructura general del macizo rocoso, el tipo y densidad de fracturamiento, "
+                "la orientación de las discontinuidades (si es inferible), y la estabilidad del talud así como su calida (buena, moderad, mala)"
+                "y cualquier rasgo que implique riesgos geotécnicos como deslizamientos, caídas de bloques o colapsos. "
+                "Incluye también observaciones sobre propiedades mecánicas visibles como compacidad, meteorización superficial o heterogeneidad del material. "
+                "Evita listas; redacta todo como un párrafo fluido y técnico."
             )
         else:  # roca
             prompt = (
-                "Genera una descripción en un solo párrafo de aproximadamente 100 palabras sobre la roca mostrada en la imagen, "
-                "desde un enfoque geotécnico. Incluye detalles sobre textura, fracturamiento, resistencia esperada, tipo de roca, "
-                "posibles defectos o debilidades, compactación, y cualquier característica que impacte la estabilidad o comportamiento mecánico. "
-                "La descripción debe ser técnica, coherente y redactada como un párrafo continuo, sin listas ni puntos."
+                "Redacta un párrafo técnico y detallado (alrededor de 100 palabras) que describa la muestra de roca visible en la imagen, "
+                "desde un enfoque geotécnico. Describe el tipo de roca (si es identificable), textura, grado de compactación, fracturamiento o fisuras presentes, "
+                "resistencia mecánica esperada, meteorización visible y cualquier debilidad estructural o heterogeneidad relevante. "
+                "Enfócate en características que puedan afectar el comportamiento de la roca en campo, como la estabilidad o la deformabilidad. "
+                "El texto debe ser fluido, sin enumeraciones, con lenguaje técnico claro y redactado como un párrafo continuo."
             )
             
         return describir_imagen(image_path, prompt, model)
         
     except Exception as e:
         logger.error(f"Error en describir_imagen_por_tipo: {str(e)}")
+        raise
+
+# -- CONFIGURACIÓN API Y MODELO TEXTO SECCIONES DEL INFORME ---
+
+def generar_objetivos_desde_titulo(model, titulo_proyecto):
+    """Genera objetivos técnicos a partir del título del proyecto."""
+    try:
+        if not titulo_proyecto or len(titulo_proyecto.strip()) == 0:
+            raise ValueError("El título del proyecto no puede estar vacío")
+            
+        prompt = (
+            "Eres un redactor técnico. Tu tarea es redactar los objetivos para un informe geológico "
+            "basándote únicamente en el siguiente título del proyecto:\n\n"
+            f"Título del proyecto: {titulo_proyecto}\n\n"
+            "Escribe sólo el objetivo general y dos objetivos específicos, "
+            "en texto plano, sin encabezados, sin etiquetas, sin asteriscos ni formatos markdown. "
+            "El texto debe ser claro, técnico y académico, y no debe repetir literalmente el título."
+        )
+
+        logger.info(f"Generando objetivos para proyecto: {titulo_proyecto}")
+        response = model.generate_content(prompt)
+        
+        if not response.text:
+            raise ValueError("La respuesta del modelo está vacía")
+            
+        return response.text.strip()
+        
+    except Exception as e:
+        logger.error(f"Error al generar objetivos: {str(e)}")
         raise
 
 def generar_informe_general(bloques, model):
@@ -139,7 +171,7 @@ def generar_informe_general(bloques, model):
             "\n\n"
         )
         
-        for bloque in bloques:
+        for bloque in bloques:   
             prompt += f"Afloramiento {bloque.get('id', 'N/A')}:\n"
             prompt += f"- Sistema de referencia: {bloque.get('sistema_ref', 'No especificado')}\n"
             coords = bloque.get("coordenadas", {})
@@ -251,32 +283,7 @@ def generar_conclusiones(bloques, model):
         logger.error(f"Error al generar conclusiones: {str(e)}")
         raise
 
-def generar_objetivos_desde_titulo(model, titulo_proyecto):
-    """Genera objetivos técnicos a partir del título del proyecto."""
-    try:
-        if not titulo_proyecto or len(titulo_proyecto.strip()) == 0:
-            raise ValueError("El título del proyecto no puede estar vacío")
-            
-        prompt = (
-            "Eres un redactor técnico. Tu tarea es redactar los objetivos para un informe geológico "
-            "basándote únicamente en el siguiente título del proyecto:\n\n"
-            f"Título del proyecto: {titulo_proyecto}\n\n"
-            "Escribe sólo el objetivo general y dos objetivos específicos, "
-            "en texto plano, sin encabezados, sin etiquetas, sin asteriscos ni formatos markdown. "
-            "El texto debe ser claro, técnico y académico, y no debe repetir literalmente el título."
-        )
-
-        logger.info(f"Generando objetivos para proyecto: {titulo_proyecto}")
-        response = model.generate_content(prompt)
-        
-        if not response.text:
-            raise ValueError("La respuesta del modelo está vacía")
-            
-        return response.text.strip()
-        
-    except Exception as e:
-        logger.error(f"Error al generar objetivos: {str(e)}")
-        raise
+# -- CONFIGURACIÓN PARA EVALUACIÓN DEL MODELO ---
 
 def evaluate_response(predicted_text: str, expected_text: str) -> dict:
     """Evalúa la respuesta usando métricas de similitud."""
@@ -314,8 +321,9 @@ def evaluate_response(predicted_text: str, expected_text: str) -> dict:
             "error": str(e)
         }
 
+# -- CONFIGURACIÓN PARA LA INTERPRETACIÓN ENSAYO DEL ESCLERÓMETRO ---
+
 def generar_interpretacion_esclerometro(resultados, model):
-    """Genera una interpretación técnica de resultados de esclerómetro."""
     try:
         if not resultados:
             raise ValueError("Los resultados del esclerómetro no pueden estar vacíos")
@@ -329,7 +337,8 @@ def generar_interpretacion_esclerometro(resultados, model):
             f"- UCS media: {resultados.get('ucs_prom', 'N/A')}\n"
             f"- UCS mediana: {resultados.get('ucs_mediana', 'N/A')}\n"
             f"- Módulo de Young (E): {resultados.get('e', 'N/A')} MPa\n\n"
-            "Redacta una interpretación clara y profesional que explique qué indican estos resultados sobre la calidad y resistencia de la roca, posibles aplicaciones y recomendaciones. "
+            "Redacta una interpretación clara y profesional que explique qué indican estos resultados sobre la calidad "
+            "y resistencia de la roca, posibles aplicaciones y recomendaciones. "
             "El texto debe ser técnico, coherente y claro, sin repetir datos textualmente."
         )
         
