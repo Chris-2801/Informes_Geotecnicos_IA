@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 API_KEYS = [
+    os.getenv("GEMINI_API_KEY_7", "AIzaSyBq8tSImeXdJ299LG-xgStU_RcvFj7CNwU"),  #creada 8/7/2025
     os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
     os.getenv("GEMINI_API_KEY_5", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"), #Agotada
     os.getenv("GEMINI_API_KEY_1", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
