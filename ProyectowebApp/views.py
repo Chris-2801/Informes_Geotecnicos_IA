@@ -16,8 +16,6 @@ from .utils import (describir_imagen_por_tipo, generar_informe_general, generar_
 
 #---API USUARIO---
 
-
-
 @csrf_exempt
 
 # -- GENERACIÓN DE TEXTO CON GEMINI ---

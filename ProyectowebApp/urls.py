@@ -6,7 +6,6 @@ from ProyectowebApp import views
 
 urlpatterns = [
     path('subir_imagen/', views.subir_imagen, name='subir_imagen'),
-    path('verificar-api-key/', views.verificar_api_key, name='verificar_api_key'),
     path('generar-objetivos/', views.generar_objetivos, name='generar_objetivos'),
     path('generar_resultado/', views.generar_resultado, name='generar_resultado'),
     path('calcular_esclerometro/', views.calcular_esclerometro, name='calcular_esclerometro'),
