@@ -130,11 +130,11 @@ DEBUG = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Para producción (collectstatic)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Directorios donde Django buscará archivos estáticos adicionales
+# Agregar la carpeta 'static' de tu app ProyectowebApp
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # ← Usa os.path.join
+    BASE_DIR / 'ProyectowebApp' / 'static',
 ]
 
 # Default primary key field type
