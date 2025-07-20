@@ -134,7 +134,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Para producción (collect
 
 # Directorios donde Django buscará archivos estáticos adicionales
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'ProyectowebApp', 'static'),  # ← Usa os.path.join
+    os.path.join(BASE_DIR, 'static'),  # ← Usa os.path.join
 ]
 
 # Default primary key field type

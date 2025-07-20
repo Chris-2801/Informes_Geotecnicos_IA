@@ -1,17 +1,22 @@
-import io, re, os, uuid, json, math, base64, statistics, matplotlib
+import io, re, os, uuid, json, math, base64, statistics, matplotlib, logging
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 import mplstereonet
 
 import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 
-from .utils import (describir_imagen_por_tipo, generar_informe_general, generar_discusion, generar_conclusiones, generar_objetivos_desde_titulo,
-    configurar_genai, generar_interpretacion_esclerometro, evaluate_response)
+from .utils import (describir_imagen_por_tipo, generar_informe_general, generar_discusion, generar_conclusiones, 
+                    generar_objetivos_desde_titulo, obtener_modelo_personalizado, configurar_genai, generar_interpretacion_esclerometro, evaluate_response)
+
+#---API USUARIO---
+
+
 
 @csrf_exempt
 

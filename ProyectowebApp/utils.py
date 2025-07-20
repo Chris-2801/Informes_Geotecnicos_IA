@@ -68,6 +68,21 @@ def obtener_modelo_por_indice(api_index):
     except Exception as e:
         logger.error(f"Error general al configurar la API: {str(e)}")
         raise RuntimeError(f"Error general al configurar la API: {str(e)}") from e
+    
+def obtener_modelo_personalizado(api_key_personalizada):
+    """Configura y devuelve un modelo con la API Key proporcionada por el usuario"""
+    try:
+        genai.configure(api_key=api_key_personalizada)
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        
+        # Prueba de conexión básica
+        prueba = model.generate_content("Responde con 'OK'")
+        if not prueba.text or "OK" not in prueba.text:
+            raise RuntimeError("La API no respondió correctamente")
+            
+        return model
+    except Exception as e:
+        raise RuntimeError(f"Error con API Key personalizada: {str(e)}")
 
 # -- CONFIGURACIÓN API Y MODELO IMÁGENES ---
 

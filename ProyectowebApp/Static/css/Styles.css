@@ -1,105 +1,27 @@
 /* === GLOBAL RESET === */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* {box-sizing: border-box; margin: 0; padding: 0;}
+html, body {font-family: Arial, sans-serif;background: #f0f0f5;overflow-x: hidden; width: 100%; padding-top: 50px;}
+h2 {text-align: center;}
 
-html, body {
-  font-family: Arial, sans-serif;
-  background: #f0f0f5;
-  overflow-x: hidden;
-  width: 100%;
-  padding-top: 50px;
-}
-
-h2 {
-  text-align: center;
-}
-
-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  margin-top: 8px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
+button {background-color: #007bff;color: white;border: none;padding: 8px 12px;border-radius: 5px;margin-top: 8px;cursor: pointer;}
+button:hover {background-color: #0056b3;}
 
 /* === BLOQUES Y COLUMNA === */
-.bloque {
-  background: #fff;
-  border: 2px solid #ccc;
-  border-radius: 10px;
-  padding: 15px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.bloque h3 {
-  margin-bottom: 10px;
-}
-
-.flex {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.columna {
-  flex: 1;
-  min-width: 250px;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-}
+.bloque {background: #fff;border: 2px solid #ccc;border-radius: 10px;padding: 15px;margin-bottom: 30px;box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);}
+.bloque h3 {margin-bottom: 10px;}
+.flex {display: flex;flex-wrap: wrap;gap: 20px;max-width: 100%;overflow-x: hidden;}
+.columna {flex: 1;min-width: 250px;max-width: 100%;display: flex;flex-direction: column;}
 
 /* === FORMULARIO === */
-.form-group {
-  margin-bottom: 10px;
-}
-
-.form-group label {
-  font-weight: bold;
-  margin-bottom: 3px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-}
-
-.acciones {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-  align-items: center;
-}
-
-.acciones input[type="file"] {
-  display: inline-block;
-}
-
-.eliminar {
-  background-color: #dc3545;
-}
+.form-group {margin-bottom: 10px;}
+.form-group label {font-weight: bold;margin-bottom: 3px;}
+.form-group input,.form-group select {width: 100%;padding: 6px;border: 1px solid #ccc;border-radius: 5px;}
+.acciones {display: flex;gap: 10px;flex-wrap: wrap;margin-top: 10px;align-items: center;}
+.acciones input[type="file"] {display: inline-block;}
+.eliminar {background-color: #dc3545;}
 
 /* === RESULTADOS === */
-.resultado-general {
-  margin-top: 20px;
-  display: none;
-  flex-direction: row;
+.resultado-general {margin-top: 20px;display: none;flex-direction: row;
   justify-content: space-between;
   gap: 20px;
 }
@@ -1001,4 +923,40 @@ select {
   border-radius: 4px;
   font-weight: bold;
   margin-top: 0.5rem;
+}
+
+/* Añade esto a tu archivo CSS */
+#api-key-container {
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#validationResult {
+    transition: all 0.3s ease;
+}
+
+.spinner-border {
+    vertical-align: middle;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 0;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
 }
