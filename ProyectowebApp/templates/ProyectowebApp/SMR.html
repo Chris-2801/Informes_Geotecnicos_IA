@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+  <title>Calculadora SMR</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 50px;
+      display: flex; flex-wrap: wrap; gap: 10px;
+      padding-top: 150px;
+    }
+    .column {
+      flex: 1;
+      min-width: 320px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    label, select, input, button {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+      box-sizing: border-box;
+    }
+    button {
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .resultado-valores {
+      background: #f9f9f9;
+      padding: 15px;
+      border-left: 5px solid #007BFF;
+      margin-top: 20px;
+    }
+    .mensaje-info {
+      font-size: 13px;
+      color: #555;
+      margin-top: -5px;
+      margin-bottom: 10px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="barra-superior-extra">
+    Clasificación Geomecánica SMR (Slope Mass Rating)
+  </div>
+
+  <!-- BARRA SUPERIOR -->
+  <nav class="barra-superior">
+    <div class="contenedor-nav">
+      <span class="logo">GeoReport</span>
+      <div class="botones-nav">
+        <a id="btn-regresar" href="{% url 'subir_imagen' %}">Regresar a la Generación del informe</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Tablas a la izquierda -->
+  <div class="column">
+    <h2>Tablas de Clasificación</h2>
+
+    <h3>F1 (Δβ y Clasificación)</h3>
+    <table>
+      <tr><th>Δβ (°)</th><th>F1</th><th>Clasificación</th></tr>
+      <tr><td>&lt; 5</td><td>1</td><td>Muy desfavorable</td></tr>
+      <tr><td>5 - 10</td><td>0.85</td><td>Desfavorable</td></tr>
+      <tr><td>10 - 20</td><td>0.7</td><td>Normal</td></tr>
+      <tr><td>20 - 30</td><td>0.4</td><td>Favorable</td></tr>
+      <tr><td>&gt; 30</td><td>0.15</td><td>Muy favorable</td></tr>
+    </table>
+
+    <h3>F2 (βj y Clasificación) - Rotura Planar</h3>
+    <table>
+      <tr><th>βj (°)</th><th>F2</th><th>Clasificación</th></tr>
+      <tr><td>&lt; 20</td><td>0.15</td><td>Muy favorable</td></tr>
+      <tr><td>20 - 30</td><td>0.40</td><td>Favorable</td></tr>
+      <tr><td>30 - 35</td><td>0.70</td><td>Normal</td></tr>
+      <tr><td>35 - 45</td><td>0.85</td><td>Desfavorable</td></tr>
+      <tr><td>&gt; 45</td><td>1</td><td>Muy desfavorable</td></tr>
+    </table>
+
+    <h3>F3 (Relaciones y Valores)</h3>
+    <table>
+      <tr><th>Rotura</th><th>Relación</th><th>F3</th></tr>
+      <tr><td>Planar</td><td>b<sub>j</sub> - b<sub>T</sub> &gt; 10°</td><td>0</td></tr>
+      <tr><td>Planar</td><td>10° a 0°</td><td>-6</td></tr>
+      <tr><td>Planar</td><td>= 0°</td><td>-25</td></tr>
+      <tr><td>Planar</td><td>0° a -10°</td><td>-50</td></tr>
+      <tr><td>Planar</td><td>&lt; -10°</td><td>-60</td></tr>
+      <tr><td>Vuelco</td><td>b<sub>j</sub> + b<sub>T</sub> &lt; 110°</td><td>0</td></tr>
+      <tr><td>Vuelco</td><td>110° - 120°</td><td>-6</td></tr>
+      <tr><td>Vuelco</td><td>&gt; 120°</td><td>-25</td></tr>
+    </table>
+
+    <h3>F4 (Método de Excavación)</h3>
+    <table>
+      <tr><th>Método</th><th>F4</th></tr>
+      <tr><td>Alud natural</td><td>+15</td></tr>
+      <tr><td>Pre-corte</td><td>+10</td></tr>
+      <tr><td>Voladura suave / mecánico</td><td>+8</td></tr>
+      <tr><td>Voladura</td><td>0</td></tr>
+      <tr><td>Voladura deficiente</td><td>-8</td></tr>
+    </table>
+  </div>
+
+  <!-- Formulario y resultados a la derecha -->
+  <div class="column">
+    <h2>Formulario de cálculo</h2>
+    <form method="post">
+      {% csrf_token %}
+
+      <label for="rmr_basico">RMR básico (opcional):</label>
+      <input type="number" step="0.01" name="rmr_basico" id="rmr_basico" placeholder="0">
+
+      <div class="mensaje-info">* Ingrese 0 si solo desea calcular los factores F1, F2, F3 y F4.</div>
+
+      <label for="beta_j">Beta J (°) (Buzamiento de la junta):</label>
+      <input type="number" step="0.1" name="beta_j" required>
+
+      <label for="beta_t">Beta T (°) (Buzamiento del talud):</label>
+      <input type="number" step="0.1" name="beta_t" required>
+
+      <label for="lambda_val">λ (lambda):</label>
+      <input type="number" step="0.01" name="lambda_val" required>
+
+      <label for="tipo_rotura">Tipo de rotura:</label>
+      <select name="tipo_rotura" required>
+        <option value="planar">Planar</option>
+        <option value="vuelco">Vuelco</option>
+      </select>
+
+      <label for="metodo_excavacion">Método de excavación:</label>
+      <select name="metodo_excavacion" required>
+        <option value="talud_natural">Alud natural</option>
+        <option value="precorte">Pre-corte</option>
+        <option value="voladura_suave">Voladura suave</option>
+        <option value="voladura_mecanica">Voladura mecánica</option>
+        <option value="voladura_deficiente">Voladura deficiente</option>
+      </select>
+
+      <button type="submit">Calcular SMR</button>
+    </form>
+
+    {% if resultado %}
+      {% if resultado.error %}
+        <p class="error">Error: {{ resultado.error }}</p>
+      {% else %}
+        <div class="resultado-valores">
+          <h2>Resultados</h2>
+          <p><strong>Tipo de rotura:</strong> {{ request.POST.tipo_rotura }}</p>
+          <p><strong>Δβ (ángulo calculado):</strong> {{ resultado.delta }}°</p>
+          <p><strong>RQD:</strong> {{ resultado.rqd }}</p>
+          <p><strong>F1 (tabla):</strong> {{ resultado.f1 }} ({{ resultado.f1_txt }})</p>
+          <p><strong>F1 (fórmula):</strong> {{ resultado.f1_calc }}</p>
+          <p><strong>F2 (tabla):</strong> {{ resultado.f2 }} ({{ resultado.f2_txt }})</p>
+          <p><strong>F2 (fórmula):</strong> {{ resultado.f2_calc }}</p>
+          <p><strong>F3:</strong> {{ resultado.f3 }} ({{ resultado.f3_txt }})</p>
+          <p><strong>F4:</strong> {{ resultado.f4 }}</p>
+          <p><strong>RMR Básico:</strong> {{ resultado.rmr_basico }}</p>
+          <hr>
+          <h3>SMR = {{ resultado.smr }}</h3>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="footer-personalizado">
+    <p>&copy; {{ year|default:"2025" }} GeoReport — Todos los derechos reservados</p>
+  </footer>
+</body>
+</html>

@@ -21,6 +21,8 @@ urlpatterns = [
     path('calculate_phi_values/', views.calculate_phi_values, name='calculate_phi_values'),
     path('calculate_probe_data/<int:probe_num>/', views.calculate_probe_data, name='calculate_probe_data'),
     path('get_detailed_table/<int:probe_num>/', views.get_detailed_table, name='get_detailed_table'),
+
+    path('SMR/', views.calcular_smr, name='SMR'),
 ]
 
 # Esto permitirá que Django sirva archivos de medios durante el desarrollo (cuando DEBUG=True)

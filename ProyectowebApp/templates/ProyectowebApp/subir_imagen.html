@@ -1,167 +1,372 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Registro de Afloramientos y Rocas</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Afloramientos y Rocas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
 
-    <!-- Librerías externas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/svg2pdf.js@1.4.7/dist/svg2pdf.umd.min.js"></script>
+  <!-- Librerías externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/svg2pdf.js@1.4.7/dist/svg2pdf.umd.min.js"></script>
 
-    <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
-  </head>
-  <body>
-    <div class="barra-superior-extra">GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA</div>
+  <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
 
-    <nav class="barra-superior">
-      <div class="contenedor-nav">
-        <span class="logo">GeoReport</span>
-        <div class="botones-nav">
-          <a onclick="mostrarSeccion('datos')">Datos</a>
-          <a onclick="mostrarSeccion('afloramientos')">Afloramientos</a>
-          <a onclick="mostrarSeccion('resultados')">Resultados</a>
-          <a onclick="mostrarSeccion('EnsayosLaboratorio')">Cálculo de Ensayos</a>
-          <a href="{% url 'Validacion' %}" id="btn-validacion">Validación</a>
+</head>
+
+<body>
+  <div class="barra-superior-extra">GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA</div>
+
+  <!-- BARRA SUPERIOR -->
+  <nav class="barra-superior">
+    <div class="contenedor-nav">
+      <span class="logo">GeoReport</span>
+      <div class="botones-nav">
+        <a href="{% url 'Validacion' %}" id="btn-validacion">Validación</a>
+        <a id="btn-ensayos-menu">Cálculo de Ensayos</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BARRA SECUNDARIA DINÁMICA -->
+  <div class="barra-secciones-internas" id="barra-secundaria">
+    <a onclick="mostrarSeccion('datos')" class="activo">Datos</a>
+    <a onclick="mostrarSeccion('afloramientos')">Afloramientos</a>
+    <a onclick="mostrarSeccion('geomecanica')">Geomecánica</a>
+    <a onclick="mostrarSeccion('resultados')">Resultados</a>
+  </div>
+
+  <main>
+    <!-- SECCIÓN DATOS -->
+    <section id="datos" class="seccion-contenido activa">
+      <div class="contenedor-datos-doble-columna">
+        <div class="columna-izquierda">
+          <label for="titulo-proyecto">🎓 Título del Proyecto</label>
+          <input type="text" id="titulo-proyecto" placeholder="Ingrese el título del proyecto" />
+
+          <label for="autores">✍️ Autores</label>
+          <input type="text" id="autores" placeholder="Nombres de los autores" />
+
+          <div class="fila-horizontal">
+            <div class="campo-carrera">
+              <label for="carrera">🏫 Carrera</label>
+              <select id="carrera">
+                <option value="GEOLOGÍA">GEOLOGÍA</option>
+                <option value="MINAS">MINAS</option>
+                <option value="PETRÓLEOS">PETRÓLEOS</option>
+                <option value="AMBIENTAL">AMBIENTAL</option>
+              </select>
+            </div>
+
+            <div class="campo-materia">
+              <label for="materia">📘 Materia</label>
+              <input type="text" id="materia" placeholder="Nombre de la materia" />
+            </div>
+          </div>
+        </div>
+
+        <div class="columna-derecha">
+          <h3>🎯 Objetivos</h3>
+          <button onclick="generarObjetivos()">Generar Objetivos</button>
+          <div id="resultado-objetivos" class="caja-resultado">
+            <button onclick="editarTexto('objetivos', this)">Editar Objetivos</button>
+            <div id="texto-objetivos"></div>
+          </div>
         </div>
       </div>
-    </nav>
+    </section>
 
-    <main>
-      <section id="datos" class="seccion-contenido">
-        <h2>Registrar Afloramiento y Roca</h2>
-        <h4>Título del Proyecto</h4>
-        <input type="text" id="titulo-proyecto" placeholder="Ingrese el título del proyecto" style="width: 100%; padding: 8px;" />
-        <h4>Autores</h4>
-        <input type="text" id="autores" placeholder="Nombres de los autores" style="width: 100%; padding: 8px;" />
+    <!-- SECCIÓN AFLORAMIENTOS -->
+    <section id="afloramientos" class="seccion-contenido">
+      <button onclick="añadirBloque()">Añadir Afloramiento/Roca</button>
+      <div id="contenedor"></div>
+      <div id="contenedor-tablas"></div>
+    </section>
 
-        <h4>Carrera</h4>
-        <select id="carrera" style="width: 100%; padding: 8px;">
-          <option value="GEOLOGÍA">GEOLOGÍA</option>
-          <option value="MINAS">MINAS</option>
-          <option value="PETRÓLEOS">PETRÓLEOS</option>
-          <option value="AMBIENTAL">AMBIENTAL</option>
-        </select>
-
-        <h4>Materia</h4>
-        <input type="text" id="materia" placeholder="Nombre de la materia" style="width: 100%; padding: 8px;" />
-
-        <h3 style="margin-top: 20px;">Objetivos</h3>
-        <button onclick="generarObjetivos()" style="margin-top: 10px;">Generar Objetivos</button>
-
-        <div id="resultado-objetivos" style="margin-top: 20px; background: #f8f8f8; padding: 15px; border: 1px solid #ccc;">
-          <button onclick="editarTexto('objetivos', this)" style="margin-bottom: 10px;">Editar Objetivos</button>
-          <div id="texto-objetivos"></div>
+    <!--GEOMECÁNICA-->
+    <section id="geomecanica" class="seccion-contenido">
+      <p class="texto-informativo">Para calcular la resistencia a la compresión uniaxial UCS dirigirse a la sección <b>Cálculo de Ensayos</b>: Ensayo Esclerómetro</p>
+      <p class="texto-informativo">Para calcular el valor del RQD y los factores de corrección F1, F2, F3, y F4 del SMR dirigirse a la sección <b>Cálculo de Ensayos</b>: Factores de corrección SMR</p>
+      <p></p>
+            <!-- Sección de análisis RMR -->
+      <div id="analisis-rmr" class="seccion-analisis-rmr" style="display: none;">
+        <h2>Análisis RMR (Rock Mass Rating)</h2>
+        
+        <!-- Selector de afloramiento -->
+        <div>
+          <label for="selector-afloramiento">Seleccionar Afloramiento:</label>
+          <select id="selector-afloramiento" class="selector-afloramiento" onchange="actualizarEstadisticasPorAfloramiento()">
+            <option value="todos">Todos los Afloramientos</option>
+            <!-- Opciones se llenarán dinámicamente -->
+          </select>
         </div>
-      </section>
-
-      <section id="afloramientos" class="seccion-contenido">
-        <h2>Afloramientos</h2>
-        <button onclick="añadirBloque()">Añadir Afloramiento/Roca</button>
-        <div id="contenedor"></div>
-      </section>
-
-      <section id="resultados" class="seccion-contenido">
-        <h2>Resultados</h2>
-        <div style="text-align:center; margin-top: 40px;">
-          <button onclick="generarResultadoGeneral()" style="font-size:18px; padding: 12px 20px;">
-            Generar Resultados Generales
-          </button>
+        
+        <!-- Tabla detallada de RMR -->
+        <div class="tabla-detalle-container">
+          <h3>Datos de Afloramiento</h3>
+          <table class="tabla-detalle-rmr" id="tabla-detalle-rmr">
+            <thead>
+              <tr>
+                <th rowspan="3">Afloramiento</th>
+                <th rowspan="3">Familia</th>
+              </tr>
+              <tr>
+                <!-- Parámetros RMR -->
+                <th colspan="2">UCS</th>
+                <th colspan="2">RQD</th>
+                <th colspan="2">Espaciamiento</th>
+                <th colspan="2">Continuidad</th>
+                <th colspan="2">Apertura</th>
+                <th colspan="2">Rugosidad</th>
+                <th colspan="2">Relleno</th>
+                <th colspan="2">Alteración</th>
+                <th colspan="2">Agua freática</th>
+                <th rowspan="2">RMR Total</th>
+              </tr>
+              <tr>
+                <!-- Subtítulos para parámetros RMR -->
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+                <th>Clase</th><th>Valor</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-detalle-rmr">
+              <!-- Aquí se insertarán las filas dinámicamente -->
+            </tbody>
+          </table>
         </div>
+        
+        <!-- Contenedor para gráfico y estadísticas -->
+        <div class="contenedor-rmr">
+          <!-- Gráfico RMR -->
+          <div class="grafico-rmr">
+            <h3>Distribución de Valores RMR</h3>
+            <canvas id="grafico-rmr"></canvas>
+          </div>
+          
+          <!-- Estadísticas RMR -->
+          <div class="tabla-estadisticas-rmr">
+            <h3>Estadísticas RMR</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Estadística</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody id="estadisticas-rmr">
+                <tr><td>Promedio</td><td id="promedio-rmr">-</td></tr>
+                <tr><td>Mediana</td><td id="mediana-rmr">-</td></tr>
+                <tr><td>Moda</td><td id="moda-rmr">-</td></tr>
+                <tr><td>Máximo</td><td id="maximo-rmr">-</td></tr>
+                <tr><td>Mínimo</td><td id="minimo-rmr">-</td></tr>
+                <tr><td>Desviación Estándar</td><td id="desviacion-rmr">-</td></tr>
+              </tbody>
+            </table>
+            
+            <!-- Tabla de Clasificación RMR -->
+            <h3 style="margin-top: 20px;">Clasificación RMR</h3>
+            <table class="tabla-clasificacion-rmr">
+              <thead>
+                <tr>
+                  <th>Clasificación</th>
+                  <th>Rango RMR</th>
+                  <th>Calidad de la Roca</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr id="clase1"><td>Clase I</td><td>81-100</td><td>Muy Buena</td></tr>
+                <tr id="clase2"><td>Clase II</td><td>61-80</td><td>Buena</td></tr>
+                <tr id="clase3"><td>Clase III</td><td>41-60</td><td>Regular</td></tr>
+                <tr id="clase4"><td>Clase IV</td><td>21-40</td><td>Mala</td></tr>
+                <tr id="clase5"><td>Clase V</td><td>0-20</td><td>Muy Mala</td></tr>
+              </tbody>
+            </table>
+            
+            <button id="btn-calcular-rmr" class="btn-calcular-rmr" onclick="calcularEstadisticasRMR()">
+              Calcular Estadísticas RMR
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sección de análisis SMR -->
+      <div id="analisis-smr" class="seccion-analisis-smr" style="display: none;">
+        <h2>Análisis SMR (Slope Mass Rating)</h2>
+        
+        <!-- Selector de afloramiento -->
+        <div class="selector-container">
+          <label for="selector-afloramiento-smr">Seleccionar Afloramiento:</label>
+          <select id="selector-afloramiento-smr" class="selector-afloramiento">
+            <option value="todos">Todos los Afloramientos</option>
+            <!-- Opciones se llenarán dinámicamente -->
+          </select>
+        </div>
+        
+        <!-- Tabla de factores de corrección por familia -->
+        <div class="tabla-factores-container">
+          <h3>Factores de Corrección SMR por Familia</h3>
+          <table class="tabla-factores-smr" id="tabla-factores-smr">
+            <thead>
+              <tr>
+                <th>Afloramiento</th>
+                <th>Familia</th>
+                <th>F1 (0 - 1)</th>
+                <th>F2 (0 - 1)</th>
+                <th>F3 (0 - 1)</th>
+                <th>F4 (-60-0)</th>
+                <th>RMR</th>
+                <th>SMR</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-factores-smr">
+              <!-- Filas se generan automáticamente -->
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Resultados y gráficos -->
+        <div class="contenedor-resultados-smr">
+          <div class="grafico-container">
+            <h3>Distribución de Valores SMR</h3>
+            <canvas id="grafico-smr"></canvas>
+          </div>
+          <div class="tabla-estadisticas-rmr">
+                  <h3>Estadísticas SMR</h3>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Estadística</th>
+                        <th>Valor</th>
+                      </tr>
+                    </thead>
+                    <tbody id="estadisticas-rmr">
+                      <tr><td>Promedio</td><td id="promedio-smr">-</td></tr>
+                      <tr><td>Máximo</td><td id="maximo-smr">-</td></tr>
+                      <tr><td>Mínimo</td><td id="minimo-smr">-</td></tr>
+                      <tr><td>Desviación Estándar</td><td id="desviacion-smr">-</td></tr>
+                    </tbody>
+                  </table>
+                  
+                  <!-- Tabla de Clasificación SMR -->
+                  
+                  <h3 style="margin-top: 20px;">Clasificación SMR</h3>
+                  <table class="tabla-clasificacion-rmr">
+                    <thead>
+                      <tr>
+                        <th>Clasificación</th>
+                        <th>Rango RMR</th>
+                        <th>Calidad de la Roca</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr id="clase1"><td>Clase I</td><td>81-100</td><td>Muy Buena</td></tr>
+                      <tr id="clase2"><td>Clase II</td><td>61-80</td><td>Buena</td></tr>
+                      <tr id="clase3"><td>Clase III</td><td>41-60</td><td>Regular</td></tr>
+                      <tr id="clase4"><td>Clase IV</td><td>21-40</td><td>Mala</td></tr>
+                      <tr id="clase5"><td>Clase V</td><td>0-20</td><td>Muy Mala</td></tr>
+                    </tbody>
+                  </table>
+                  
+                  <button id="btn-calcular-smr" class="btn-calcular-rmr" onclick="calcularEstadisticasSMR()">
+                    Calcular Estadísticas SMR
+                  </button>
+                </div>
 
-        <h3 style="margin-top: 20px;">Introducción</h3>
-        <div id="resultado-texto-general" class="resultado-texto-general">
+          </div>
+      </div>
+    </section>
+    <!-- SECCIÓN RESULTADOS -->
+    <section id="resultados" class="seccion-contenido">
+      <h2>Resultados</h2>
+
+      <!-- Botón de generación -->
+      <div style="text-align:center; margin-top: 40px;">
+        <button onclick="generarResultadoGeneral()" style="font-size:18px; padding: 12px 20px;">
+          Generar Resultados Generales
+        </button>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div id="barra-progreso-contenedor" style="display: none; margin: 20px auto; width: 80%; max-width: 600px;">
+        <div id="barra-progreso-texto" style="text-align: center; margin-bottom: 5px; font-weight: bold;">
+          Unos minutos te ahorrarán horas... 0%
+        </div>
+        <div style="background: #ddd; border-radius: 8px; overflow: hidden; height: 25px;">
+          <div id="barra-progreso" style="height: 100%; width: 0%; background: #4caf50; transition: width 0.4s;"></div>
+        </div>
+      </div>
+
+      <!-- Resultados Generales -->
+      <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+        <div id="resultado-texto-general" class="resultado-texto-general" style="flex: 1 1 30%; min-width: 280px;">
+          <h3>Introducción</h3>
           <button onclick="editarTexto('general', this)" style="margin-bottom: 10px;">Editar Introducción</button>
           <div id="texto-general"></div>
         </div>
 
-        <h3 style="margin-top: 20px;">Discusión</h3>
-        <div id="resultado-discusion" class="resultado-texto-general" style="background: #f0f8ff;">
+        <div id="resultado-discusion" class="resultado-texto-general" style="background: #f0f8ff; flex: 1 1 30%; min-width: 280px;">
+          <h3>Discusión</h3>
           <button onclick="editarTexto('discusion', this)" style="margin-bottom: 10px;">Editar Discusión</button>
           <div id="texto-discusion"></div>
         </div>
 
-        <h3 style="margin-top: 20px;">Conclusiones</h3>
-        <div id="resultado-conclusiones" class="resultado-texto-general" style="background: #f0fff0;">
+        <div id="resultado-conclusiones" class="resultado-texto-general" style="background: #f0fff0; flex: 1 1 30%; min-width: 280px;">
+          <h3>Conclusiones</h3>
           <button onclick="editarTexto('conclusiones', this)" style="margin-bottom: 10px;">Editar Conclusiones</button>
           <div id="texto-conclusiones"></div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section id="EnsayosLaboratorio" class="seccion-contenido">
-        <h2>Cálculo de Ensayos de Laboratorio</h2>
-        <p>Selecciona el tipo de ensayo que deseas calcular:</p>
-
+    <!-- SECCIÓN ENSAYOS -->
+    <section id="ensayos" class="seccion-contenido">
+      <div class="tarjeta">
+        <h2>&#x26CF Cálculo de Ensayos de Laboratorio</h2>
+        <p>Seleccione el tipo de ensayo que deseas realizar:</p>
+        
         <div class="contenedor-ensayos">
           <div class="botones-ensayos">
-            <a id="btn-esclerometro" href="{% url 'calcular_esclerometro' %}" class="boton-ensayo">Ensayo Esclerómetro</a>
-            <a id="btn-triaxial" href="{% url 'Triaxial' %}" class="boton-ensayo">Ensayo Triaxial</a>
+            <a href="{% url 'calcular_esclerometro' %}" class="btn-ensayo" id="btn-esclerometro">
+              <span>UCS</span> Ensayo Esclerómetro
+            </a>
+            <a href="{% url 'Triaxial' %}" class="btn-ensayo" id="btn-triaxial">
+              <span>&#916&#963-&#964</span> Ensayo Triaxial
+            </a>
+            <a href="{% url 'SMR' %}" class="btn-ensayo" id="btn-smr">
+              <span>SMR</span> Factores de Corrección SMR
+            </a>
           </div>
-          <div class="imagen-ensayos">
-            <img src="{% static 'Img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos" />
+          <div class="imagen-ensayo">
+            <img src="{% static 'Img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos">
           </div>
         </div>
-      </section>
-    </main>
+      </div>
+    </section>
+  </main>
 
-    <button class="floating-pdf-btn" onclick="generarPDF()" title="Descargar informe en PDF">PDF</button>
+  <button class="floating-pdf-btn" onclick="generarPDF()" title="Descargar informe en PDF">PDF</button>
 
-    <footer class="footer-personalizado">
-      <p>&copy; {{ year|default:"2025" }} GeoReport — Todos los derechos reservados</p>
-    </footer>
+  <footer class="footer-personalizado">
+    <p>&copy; {{ year|default:"2025" }} GeoReport — Todos los derechos reservados</p>
+  </footer>
 
-    <script src="{% static 'js/GenerarTextoGemini.js' %}"></script>
-    <script src="{% static 'js/GenerarPDF.js' %}"></script>
-    <script src="{% static 'js/Calculos.js' %}"></script>
+  <!-- Scripts -->
+  <script src="{% static 'js/GenerarTextoGemini.js' %}"></script>
+  <script src="{% static 'js/GenerarPDF.js' %}"></script>
+  <script src="{% static 'js/Calculos.js' %}"></script>
+  <script src="{% static 'js/Configuracion.js' %}"></script>
 
-    <script>
-      function mostrarSeccion(seccionId) {
-        document.querySelectorAll('.seccion-contenido').forEach(seccion => {
-          seccion.classList.remove('seccion-activa');
-        });
-        document.getElementById(seccionId).classList.add('seccion-activa');
-        document.getElementById(seccionId).scrollIntoView({ behavior: 'smooth' });
-      }
-
-      window.onload = () => {
-        mostrarSeccion('datos');
-        if (!sessionStorage.getItem("reiniciado")) {
-          if (!confirm("¿Deseas reiniciar la página?")) return;
-          sessionStorage.setItem("reiniciado", "true");
-        }
-
-        ["btn-esclerometro", "btn-validacion", "btn-triaxial"].forEach(id => {
-          const btn = document.getElementById(id);
-          if (btn) {
-            btn.addEventListener("click", function (event) {
-              const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
-              if (!salir) event.preventDefault();
-            });
-          }
-        });
-      };
-
-      // Obtener CSRF token
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-    </script>
-  </body>
+</body>
 </html>

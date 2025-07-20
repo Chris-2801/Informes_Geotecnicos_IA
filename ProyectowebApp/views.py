@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.views.decorators.csrf import csrf_exempt
+import mplstereonet
 
 import matplotlib.pyplot as plt
 matplotlib.use('Agg')
@@ -86,25 +87,47 @@ def generar_objetivos(request, return_html=False):
     else:
         return JsonResponse({"error": "Método no permitido"}, status=405)
 
-
 def generar_resultado(request, return_html=False):
     if request.method == "POST":
         model = configurar_genai()
         if model is None:
+            error_msg = "Modelo no configurado correctamente."
             if return_html:
-                return render(request, "ProyectowebApp/subir_imagen.html", {
-                    "error": "Modelo no configurado correctamente."
-                })
-            else:
-                return JsonResponse({"error": "Modelo no configurado correctamente."}, status=500)
+                return render(request, "ProyectowebApp/subir_imagen.html", {"error": error_msg})
+            return JsonResponse({"error": error_msg}, status=500)
 
         try:
+            # Obtener los datos de los bloques de manera consistente
             if return_html:
-                bloques = request.POST.get("bloques", "").split(",")  # Ejemplo: ajusta según tu formulario
+                # Para formulario HTML, los datos vienen en request.POST
+                bloques = []
+                # Asumiendo que los datos vienen en campos como bloque_1, bloque_2, etc.
+                i = 1
+                while f'tipo_roca_{i}' in request.POST:
+                    bloque = {key: request.POST[key] for key in request.POST.keys() 
+                             if key.startswith(f'tipo_roca_{i}') or 
+                             key.startswith(f'roca_{i}') or 
+                             key.startswith(f'calidad_{i}') or 
+                             key.startswith(f'matriz_{i}') or 
+                             key.startswith(f'textura_{i}') or 
+                             key.startswith(f'mineralogia_{i}') or 
+                             key.startswith(f'grano_{i}') or 
+                             key.startswith(f'descripcion_afloramiento_{i}') or 
+                             key.startswith(f'descripcion_roca_{i}') or 
+                             key.startswith(f'tabla-{i}-')}
+                    if bloque:  # Solo añadir si hay datos
+                        bloques.append(bloque)
+                    i += 1
             else:
+                # Para AJAX/JSON
                 data = json.loads(request.body)
                 bloques = data.get("bloques", [])
+                
+            # Validar que hay bloques con datos
+            if not bloques:
+                raise ValueError("No se recibieron datos de bloques válidos")
 
+            # Generar las secciones del informe
             resultado = generar_informe_general(bloques, model)
             discusion = generar_discusion(bloques, model)
             conclusiones = generar_conclusiones(bloques, model)
@@ -115,25 +138,25 @@ def generar_resultado(request, return_html=False):
                     "discusion": discusion,
                     "conclusiones": conclusiones,
                 })
-            else:
-                return JsonResponse({
-                    "resultado": resultado,
-                    "discusion": discusion,
-                    "conclusiones": conclusiones,
-                })
+            return JsonResponse({
+                "resultado": resultado,
+                "discusion": discusion,
+                "conclusiones": conclusiones,
+            })
 
+        except json.JSONDecodeError as e:
+            error_msg = f"Error decodificando JSON: {str(e)}"
         except Exception as e:
-            if return_html:
-                return render(request, "ProyectowebApp/subir_imagen.html", {
-                    "error": f"Error generando secciones del informe: {str(e)}"
-                })
-            else:
-                return JsonResponse({"error": f"Error generando secciones del informe: {str(e)}"}, status=500)
+            error_msg = f"Error generando secciones del informe: {str(e)}"
+            
+        if return_html:
+            return render(request, "ProyectowebApp/subir_imagen.html", {"error": error_msg})
+        return JsonResponse({"error": error_msg}, status=500)
 
+    # Método no permitido (GET u otros)
     if return_html:
         return render(request, "ProyectowebApp/subir_imagen.html")
-    else:
-        return JsonResponse({"error": "Método no permitido"}, status=405)
+    return JsonResponse({"error": "Método no permitido"}, status=405)
 
 # -- ESTEREOGRAMA ---
 
@@ -525,3 +548,131 @@ def validacion_view(request):
         })
     
     return render(request, "ProyectowebApp/Validacion.html", {"show_results": False})
+
+# -- SMR ---
+
+def calcular_smr(request):
+    resultado = None
+    if request.method == 'POST':
+        try:
+            beta_j = float(request.POST.get('beta_j', 0))
+            beta_t = float(request.POST.get('beta_t', 0))
+            lambda_val = float(request.POST.get('lambda_val', 0))
+            tipo_rotura = request.POST.get('tipo_rotura')
+            excavacion = request.POST.get('metodo_excavacion')
+
+            # RQD
+            rqd = 100 * math.exp(-lambda_val * (0.1 * lambda_val + 1))
+
+            # F1
+            if tipo_rotura == 'planar':
+                delta = abs(beta_j - beta_t)
+            elif tipo_rotura == 'vuelco':
+                delta = abs(beta_j - beta_t - 180)
+            else:
+                delta = 0
+
+            if delta < 5:
+                f1 = 1
+                f1_txt = "Muy Desfavorable"
+            elif 5 <= delta < 10:
+                f1 = 0.85
+                f1_txt = "Desfavorable"
+            elif 10 <= delta < 20:
+                f1 = 0.7
+                f1_txt = "Normal"
+            elif 20 <= delta < 30:
+                f1 = 0.4
+                f1_txt = "Favorable"
+            else:
+                f1 = 0.15
+                f1_txt = "Muy Favorable"
+            f1_calc = (1 - math.sin(math.radians(delta))) ** 2
+
+            # F2
+            if tipo_rotura == 'vuelco':
+                f2 = 1
+                f2_txt = "Siempre 1"
+            else:
+                if beta_j < 20:
+                    f2 = 0.15
+                    f2_txt = "Muy Favorable"
+                elif 20 <= beta_j < 30:
+                    f2 = 0.4
+                    f2_txt = "Favorable"
+                elif 30 <= beta_j < 35:
+                    f2 = 0.7
+                    f2_txt = "Normal"
+                elif 35 <= beta_j < 45:
+                    f2 = 0.85
+                    f2_txt = "Desfavorable"
+                else:
+                    f2 = 1
+                    f2_txt = "Muy Desfavorable"
+            f2_calc = math.tan(math.radians(beta_j)) ** 2
+
+            # F3
+            if tipo_rotura == 'planar':
+                dif = beta_j - beta_t
+                if dif < -10:
+                    f3 = -60
+                    f3_txt = "Muy Desfavorable"
+                elif -10 <= dif < 0:
+                    f3 = -50
+                    f3_txt = "Desfavorable"
+                elif dif == 0:
+                    f3 = -25
+                    f3_txt = "Normal"
+                elif 0 < dif <= 10:
+                    f3 = -6
+                    f3_txt = "Favorable"
+                else:
+                    f3 = 0
+                    f3_txt = "Muy Favorable"
+            else:
+                suma = beta_j + beta_t
+                if suma < 110:
+                    f3 = 0
+                    f3_txt = "Muy Favorable"
+                elif 110 <= suma <= 120:
+                    f3 = -6
+                    f3_txt = "Favorable"
+                else:
+                    f3 = -25
+                    f3_txt = "Desfavorable"
+
+            # F4
+            f4_opciones = {
+                'talud_natural': 15,
+                'precorte': 10,
+                'voladura_suave': 8,
+                'voladura_mecanica': 0,
+                'voladura_deficiente': -8
+            }
+            f4 = f4_opciones.get(excavacion, 0)
+
+            rmr_basico = 0  # Puedes cambiar si quieres
+
+            # SMR
+            smr = rmr_basico + (f1 * f2 * f3) + f4
+
+            resultado = {
+                'delta': round(delta, 2),
+                'rqd': round(rqd, 2),
+                'f1': round(f1, 2),
+                'f1_txt': f1_txt,
+                'f1_calc': round(f1_calc, 2),
+                'f2': round(f2, 2),
+                'f2_txt': f2_txt,
+                'f2_calc': round(f2_calc, 2),
+                'f3': f3,
+                'f3_txt': f3_txt,
+                'f4': f4,
+                'rmr_basico': rmr_basico,
+                'smr': round(smr, 2)
+            }
+
+        except Exception as e:
+            resultado = {'error': str(e)}
+
+    return render(request, 'ProyectowebApp/SMR.html', {'resultado': resultado})

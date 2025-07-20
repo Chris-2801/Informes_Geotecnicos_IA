@@ -1,0 +1,217 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Registro de Afloramientos y Rocas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon" />
+
+  <!-- Librerías externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.4.0/html-docx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/svg2pdf.js@1.4.7/dist/svg2pdf.umd.min.js"></script>
+
+  <link rel="stylesheet" href="{% static 'css/Styles.css' %}" />
+</head>
+
+<body>
+  <div class="barra-superior-extra">GENERACIÓN AUTOMÁTICA DE INFORMES GEOTÉCNICOS USANDO IA</div>
+
+  <!-- BARRA SUPERIOR -->
+  <nav class="barra-superior">
+    <div class="contenedor-nav">
+      <span class="logo">GeoReport</span>
+      <div class="botones-nav">
+        <a href="{% url 'Validacion' %}" id="btn-validacion">Validación</a>
+        <a onclick="mostrarSeccion('EnsayosLaboratorio')">Cálculo de Ensayos</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- BARRA SECUNDARIA -->
+  <div class="barra-secciones-internas">
+    <a onclick="mostrarSeccion('datos')">Datos</a>
+    <a onclick="mostrarSeccion('afloramientos')">Afloramientos</a>
+    <a onclick="mostrarSeccion('resultados')">Resultados</a>
+  </div>
+
+  <main>
+
+    <!-- SECCIÓN DATOS -->
+    <section id="datos" class="seccion-contenido">
+      <div class="contenedor-datos-doble-columna">
+        <div class="columna-izquierda">
+          <h2>📌 Registrar Afloramiento y Roca</h2>
+
+          <label for="titulo-proyecto">🎓 Título del Proyecto</label>
+          <input type="text" id="titulo-proyecto" placeholder="Ingrese el título del proyecto" />
+
+          <label for="autores">✍️ Autores</label>
+          <input type="text" id="autores" placeholder="Nombres de los autores" />
+
+          <div class="fila-horizontal">
+            <div class="campo-carrera">
+              <label for="carrera">🏫 Carrera</label>
+              <select id="carrera">
+                <option value="GEOLOGÍA">GEOLOGÍA</option>
+                <option value="MINAS">MINAS</option>
+                <option value="PETRÓLEOS">PETRÓLEOS</option>
+                <option value="AMBIENTAL">AMBIENTAL</option>
+              </select>
+            </div>
+
+            <div class="campo-materia">
+              <label for="materia">📘 Materia</label>
+              <input type="text" id="materia" placeholder="Nombre de la materia" />
+            </div>
+          </div>
+        </div>
+
+        <div class="columna-derecha">
+          <h3>🎯 Objetivos</h3>
+          <button onclick="generarObjetivos()">Generar Objetivos</button>
+          <div id="resultado-objetivos" class="caja-resultado">
+            <button onclick="editarTexto('objetivos', this)">Editar Objetivos</button>
+            <div id="texto-objetivos"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN AFLORAMIENTOS -->
+    <section id="afloramientos" class="seccion-contenido">
+      <h2>Afloramientos</h2>
+      <button onclick="añadirBloque()">Añadir Afloramiento/Roca</button>
+      <div id="contenedor"></div>
+    </section>
+
+    <!-- SECCIÓN RESULTADOS -->
+    <section id="resultados" class="seccion-contenido">
+      <h2>Resultados</h2>
+
+      <!-- Botón de generación -->
+      <div style="text-align:center; margin-top: 40px;">
+        <button onclick="generarResultadoGeneral()" style="font-size:18px; padding: 12px 20px;">
+          Generar Resultados Generales
+        </button>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div id="barra-progreso-contenedor" style="display: none; margin: 20px auto; width: 80%; max-width: 600px;">
+        <div id="barra-progreso-texto" style="text-align: center; margin-bottom: 5px; font-weight: bold;">
+          Unos minutos te ahorrarán horas... 0%
+        </div>
+        <div style="background: #ddd; border-radius: 8px; overflow: hidden; height: 25px;">
+          <div id="barra-progreso" style="height: 100%; width: 0%; background: #4caf50; transition: width 0.4s;"></div>
+        </div>
+      </div>
+
+      <!-- Resultados Generales -->
+      <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+        <div id="resultado-texto-general" class="resultado-texto-general" style="flex: 1 1 30%; min-width: 280px;">
+          <h3>Introducción</h3>
+          <button onclick="editarTexto('general', this)" style="margin-bottom: 10px;">Editar Introducción</button>
+          <div id="texto-general"></div>
+        </div>
+
+        <div id="resultado-discusion" class="resultado-texto-general" style="background: #f0f8ff; flex: 1 1 30%; min-width: 280px;">
+          <h3>Discusión</h3>
+          <button onclick="editarTexto('discusion', this)" style="margin-bottom: 10px;">Editar Discusión</button>
+          <div id="texto-discusion"></div>
+        </div>
+
+        <div id="resultado-conclusiones" class="resultado-texto-general" style="background: #f0fff0; flex: 1 1 30%; min-width: 280px;">
+          <h3>Conclusiones</h3>
+          <button onclick="editarTexto('conclusiones', this)" style="margin-bottom: 10px;">Editar Conclusiones</button>
+          <div id="texto-conclusiones"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN ENSAYOS -->
+    <section id="EnsayosLaboratorio" class="seccion-contenido">
+      <h2>Cálculo de Ensayos de Laboratorio</h2>
+      <p>Selecciona el tipo de ensayo que deseas calcular:</p>
+
+      <div class="contenedor-ensayos">
+        <div class="botones-ensayos">
+          <a id="btn-esclerometro" href="{% url 'calcular_esclerometro' %}" class="boton-ensayo">Ensayo Esclerómetro</a>
+          <a id="btn-triaxial" href="{% url 'Triaxial' %}" class="boton-ensayo">Ensayo Triaxial</a>
+        </div>
+        <div class="imagen-ensayos">
+          <img src="{% static 'Img/Geotecnia.jpg' %}" alt="Ensayos Geotécnicos" />
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <button class="floating-pdf-btn" onclick="generarPDF()" title="Descargar informe en PDF">PDF</button>
+
+  <footer class="footer-personalizado">
+    <p>&copy; {{ year|default:"2025" }} GeoReport — Todos los derechos reservados</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="{% static 'js/GenerarTextoGemini.js' %}"></script>
+  <script src="{% static 'js/GenerarPDF.js' %}"></script>
+  <script src="{% static 'js/Calculos.js' %}"></script>
+
+  <script>
+    function mostrarSeccion(seccionId) {
+      document.querySelectorAll('.seccion-contenido').forEach(seccion => {
+        seccion.classList.remove('seccion-activa');
+      });
+      const seccion = document.getElementById(seccionId);
+      seccion.classList.add('seccion-activa');
+      seccion.scrollIntoView({ behavior: 'smooth' });
+
+      document.querySelectorAll('.barra-secciones-internas a').forEach(btn => {
+        btn.classList.remove('activa');
+      });
+
+      document.querySelectorAll('.barra-secciones-internas a').forEach(btn => {
+        if (btn.getAttribute('onclick')?.includes(seccionId)) {
+          btn.classList.add('activa');
+        }
+      });
+    }
+
+    window.onload = () => {
+      mostrarSeccion('datos');
+      if (!sessionStorage.getItem("reiniciado")) {
+        if (!confirm("¿Deseas reiniciar la página?")) return;
+        sessionStorage.setItem("reiniciado", "true");
+      }
+
+      ["btn-esclerometro", "btn-validacion", "btn-triaxial"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.addEventListener("click", function (event) {
+            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+            if (!salir) event.preventDefault();
+          });
+        }
+      });
+    };
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+  </script>
+</body>
+</html>

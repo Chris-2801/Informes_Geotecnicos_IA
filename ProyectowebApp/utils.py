@@ -12,13 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 API_KEYS = [
-    os.getenv("GEMINI_API_KEY_7", "AIzaSyBq8tSImeXdJ299LG-xgStU_RcvFj7CNwU"),  #creada 8/7/2025
-    os.getenv("GEMINI_API_KEY_6", "AIzaSyChbb_TmSiJCBRunhIimrzn0FhMYiZ3EfY"),
-    os.getenv("GEMINI_API_KEY_5", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"), #Agotada
-    os.getenv("GEMINI_API_KEY_1", "AIzaSyDKBNXovYsdXXMFB4HN_YkCOanxTpMBtyA"),
-    os.getenv("GEMINI_API_KEY_2", "AIzaSyDLZ6sGa-mzaLI9H_v2A4JddzaErK1Rc48"),
-    os.getenv("GEMINI_API_KEY_3", "AIzaSyAA2VJ8wrZRDaEN_AuWx_yZrfExkSOrido"),
-    os.getenv("GEMINI_API_KEY_4", "AIzaSyD9mMBzYnOsE69YZv-bZHWCUrSP26dNstI"),
+    os.getenv("GEMINI_API_KEY_2", "AIzaSyCJg1C1qIrX-8LX8ja1L4iZ0EOgIej_qVc"), 
+    os.getenv("GEMINI_API_KEY_3", "AIzaSyBcdI8jWUsn9xt-gj_Wsg0cDncuKo5tjCs"),  #christofervalencia977@gmail.com
 ]
 
 def configurar_genai():
@@ -28,7 +23,7 @@ def configurar_genai():
     for api_key in API_KEYS:
         try:
             genai.configure(api_key=api_key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
+            model = genai.GenerativeModel("gemini-2.5-flash")
             response = model.generate_content("ping")
             if response.text:
                 print(f"[✔] Clave válida usada: {api_key[:10]}...{api_key[-10:]}")
@@ -55,7 +50,7 @@ def obtener_modelo_por_indice(api_index):
         logger.info(f"Configurando modelo con clave API índice {api_index}")
         
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
         
         # Prueba de conexión básica
         prueba = model.generate_content("Responde con 'OK'")
@@ -164,47 +159,65 @@ def generar_informe_general(bloques, model):
             raise ValueError("La lista de bloques está vacía")
             
         prompt = (
-            "Eres un experto geólogo. A partir de los datos de varios afloramientos y rocas, "
-            "redacta una introducción técnica y académica que integre toda la información. "
-            "Escribe sólo el texto de la introducción, sin encabezados, sin títulos, sin formato markdown ni etiquetas. "
-            "Utiliza un estilo claro, coherente, en párrafos de aproximadamente 100 palabras cada uno, "
-            "sin repetir datos textualmente y usando conectores para enlazar ideas."
-            "\n\n"
+            "Eres un experto geólogo con 20 años de experiencia en caracterización de afloramientos rocosos. "
+            "A partir de los datos técnicos de varios afloramientos, redacta una introducción técnica detallada "
+            "que integre toda la información de manera coherente. El texto debe ser académico pero claro, "
+            "con párrafos bien estructurados de aproximadamente 100 palabras cada uno. "
+            "Evita listar datos crudos y en su lugar realiza síntesis interpretativas. "
+            "Usa conectores lógicos y mantén un flujo narrativo. No incluyas títulos ni encabezados.\n\n"
+            "Datos de los afloramientos:\n\n"
         )
         
-        for bloque in bloques:   
-            prompt += f"Afloramiento {bloque.get('id', 'N/A')}:\n"
-            prompt += f"- Sistema de referencia: {bloque.get('sistema_ref', 'No especificado')}\n"
-            coords = bloque.get("coordenadas", {})
-            prompt += f"- Coordenadas: X={coords.get('x', 'N/A')}, Y={coords.get('y', 'N/A')}, Z={coords.get('z', 'N/A')}\n"
-            prompt += f"- Calidad de la roca: {bloque.get('calidad', 'No especificado')}\n"
-            prompt += f"- Descripción afloramiento: {bloque.get('descripcion_afloramiento', 'No disponible')}\n"
-            prompt += f"- Roca: {bloque.get('roca', 'No especificado')}\n"
-            prompt += f"- Matriz: {bloque.get('matriz', 'No especificado')}\n"
-            prompt += f"- Textura: {bloque.get('textura', 'No especificado')}\n"
-            prompt += f"- Mineralogía: {bloque.get('mineralogia', 'No especificado')}\n"
-            prompt += f"- Tamaño de grano: {bloque.get('grano', 'No especificado')}\n"
-            prompt += f"- Descripción roca: {bloque.get('descripcion_roca', 'No disponible')}\n"
+        for i, bloque in enumerate(bloques, 1):
+            # Extraer datos del formulario usando las claves correctas
+            sistema_ref = bloque.get(f'sistema_ref_{i}', 'No especificado')
+            coordenadas = f"X={bloque.get(f'x_{i}', 'N/A')}, Y={bloque.get(f'y_{i}', 'N/A')}, Z={bloque.get(f'z_{i}', 'N/A')}"
+            tipo_roca = bloque.get(f'tipo_roca_{i}', 'No especificado')
+            roca = bloque.get(f'roca_{i}', 'No especificado')
+            calidad = bloque.get(f'calidad_{i}', 'No especificado')
+            
+            prompt += f"Afloramiento {i}:\n"
+            prompt += f"- Sistema de referencia: {sistema_ref}\n"
+            prompt += f"- Coordenadas: {coordenadas}\n"
+            prompt += f"- Tipo de roca: {tipo_roca} ({roca})\n"
+            prompt += f"- Calidad del macizo rocoso: {calidad}\n"
+            prompt += f"- Características petrográficas:\n"
+            prompt += f"  • Matriz: {bloque.get(f'matriz_{i}', 'No especificado')}\n"
+            prompt += f"  • Textura: {bloque.get(f'textura_{i}', 'No especificado')}\n"
+            prompt += f"  • Mineralogía: {bloque.get(f'mineralogia_{i}', 'No especificado')}\n"
+            prompt += f"  • Tamaño de grano: {bloque.get(f'grano_{i}', 'No especificado')}\n"
+            
+            # Descripciones generadas por IA
+            prompt += f"- Descripción del afloramiento: {bloque.get(f'descripcion_afloramiento_{i}', 'No disponible')}\n"
+            prompt += f"- Descripción de la roca: {bloque.get(f'descripcion_roca_{i}', 'No disponible')}\n"
 
-            familias = bloque.get("familias", [])
-            prompt += "- Familias:\n"
+            # Procesar familias de discontinuidades
+            familias = []
+            for key in bloque.keys():
+                if key.startswith(f'tabla-{i}-'):
+                    familias.append(bloque[key])
+            
+            prompt += f"- Número de familias de discontinuidades: {len(familias)}\n"
+            
             if familias:
-                for fam in familias:
+                prompt += "  Características principales de las discontinuidades:\n"
+                for fam in familias[:3]:  # Mostrar solo las primeras 3
                     prompt += (
-                        f"  Nº {fam.get('numero', '')}, Orientación: {fam.get('orientacion', '')}, "
-                        f"Espaciamiento: {fam.get('espaciamiento', '')}, Apertura: {fam.get('apertura', '')}, "
-                        f"Continuidad: {fam.get('continuidad', '')}, Relleno: {fam.get('relleno', '')}, "
-                        f"Seepage: {fam.get('seepage', '')}, Rugosidad: {fam.get('rugosidad', '')}, "
-                        f"Meteorización: {fam.get('meteorizacion', '')}, Resistencia: {fam.get('resistencia', '')}\n"
+                        f"  • Orientación: {fam.get('orientacion', 'N/A')}, "
+                        f"UCS: {fam.get('ucs', 'N/A')} MPa, "
+                        f"RQD: {fam.get('rqd', 'N/A')}%, "
+                        f"Espaciamiento: {fam.get('espaciamiento', 'N/A')}\n"
                     )
-            else:
-                prompt += "  No hay familias registradas.\n"
             prompt += "\n"
 
         prompt += (
-            "Redacta un texto de introducción general que sintetice los datos, con párrafos de 100 palabras aprox., "
-            "en estilo técnico, académico y claro. Utiliza conectores y evita listar los datos directamente. "
-            "Concluye con una valoración preliminar de la calidad de los afloramientos observados."
+            "Con esta información, redacta una introducción técnica detallada que:\n"
+            "1. Presente el contexto geológico general\n"
+            "2. Describa las características principales de los afloramientos\n"
+            "3. Analice los tipos de rocas encontradas y sus propiedades\n"
+            "4. Evalúe la calidad general de los macizos rocosos\n"
+            "5. Integre las observaciones de campo con interpretaciones geológicas\n"
+            "El texto debe fluir naturalmente, evitando listas o enumeraciones. Usa lenguaje técnico preciso pero accesible."
         )
 
         logger.info("Generando informe general...")
@@ -219,30 +232,122 @@ def generar_informe_general(bloques, model):
         logger.error(f"Error al generar informe general: {str(e)}")
         raise
 
-def generar_discusion(bloques, model):
-    """Genera una sección de discusión técnica basada en los datos."""
+def generar_discusion(bloques, model, datos_completos_por_afloramiento=None):
+    """Genera una sección de discusión técnica basada en los datos, incluyendo análisis RMR/SMR."""
     try:
         if not bloques or len(bloques) == 0:
             raise ValueError("La lista de bloques está vacía")
             
         prompt = (
-            "Eres un experto geólogo. A partir de la información técnica de los siguientes afloramientos y rocas, "
-            "redacta una discusión clara y técnica. "
-            "Escribe sólo el texto de la discusión, sin encabezados, sin etiquetas, sin formato markdown, sin títulos. "
-            "Analiza patrones, relaciones e interpretaciones geológicas usando lenguaje técnico, con conectores lógicos y sin repetir datos textualmente. "
-            "Incluye inferencias e hipótesis geológicas cuando sea apropiado.\n\n"
+            "Como geólogo experto, analiza los siguientes datos de afloramientos rocosos y genera una discusión técnica detallada. "
+            "El texto debe ser interpretativo, con análisis de patrones y relaciones geológicas, incluyendo evaluación de calidad "
+            "del macizo rocoso mediante los índices RMR y SMR. "
+            "Incluye inferencias basadas en la evidencia y plantea hipótesis cuando sea pertinente. "
+            "Estructura el contenido en 3-4 párrafos coherentes, sin títulos ni enumeraciones.\n\n"
+            "Datos para el análisis:\n\n"
         )
         
-        for bloque in bloques:
-            prompt += f"Afloramiento {bloque.get('id', 'N/A')}:\n"
-            prompt += f"- Descripción afloramiento: {bloque.get('descripcion_afloramiento', 'No disponible')}\n"
-            prompt += f"- Descripción roca: {bloque.get('descripcion_roca', 'No disponible')}\n"
-            familias = bloque.get("familias", [])
-            prompt += f"- Familias: {len(familias)} discontinuidades registradas.\n\n"
+        for i, bloque in enumerate(bloques, 1):
+            afloramiento_id = str(i)  # Asumiendo que el índice coincide con el ID de afloramiento
+            
+            # Extraer datos del formulario
+            tipo_roca = bloque.get(f'tipo_roca_{i}', 'N/A')
+            roca = bloque.get(f'roca_{i}', 'N/A')
+            calidad = bloque.get(f'calidad_{i}', 'N/A')
+            
+            prompt += f"Afloramiento {i}:\n"
+            prompt += f"- Tipo de roca: {tipo_roca} ({roca})\n"
+            prompt += f"- Calidad: {calidad}\n"
+            prompt += f"- Características petrográficas: Matriz {bloque.get(f'matriz_{i}', 'N/A')}, "
+            prompt += f"Textura {bloque.get(f'textura_{i}', 'N/A')}, "
+            prompt += f"Mineralogía {bloque.get(f'mineralogia_{i}', 'N/A')}, "
+            prompt += f"Tamaño de grano {bloque.get(f'grano_{i}', 'N/A')}\n"
+            
+            # Descripciones generadas por IA
+            prompt += f"- Observaciones del afloramiento: {bloque.get(f'descripcion_afloramiento_{i}', 'No disponible')}\n"
+            prompt += f"- Análisis de la roca: {bloque.get(f'descripcion_roca_{i}', 'No disponible')}\n"
+            
+            # Procesar familias de discontinuidades
+            familias = []
+            for key in bloque.keys():
+                if key.startswith(f'tabla-{i}-'):
+                    familias.append(bloque[key])
+            
+            prompt += f"- Número de familias: {len(familias)}\n"
+            if familias:
+                orientaciones = [fam.get('orientacion', '') for fam in familias if fam.get('orientacion')]
+                if orientaciones:
+                    prompt += f"- Orientaciones predominantes: {', '.join(set(orientaciones))}\n"
+            
+            # Añadir datos RMR/SMR si están disponibles
+            if datos_completos_por_afloramiento and afloramiento_id in datos_completos_por_afloramiento:
+                afloramiento_data = datos_completos_por_afloramiento[afloramiento_id]
+                
+                # Estadísticas RMR
+                if afloramiento_data.get('valoresRMR'):
+                    rmr_values = afloramiento_data['valoresRMR']
+                    prompt += f"- RMR (Rock Mass Rating):\n"
+                    prompt += f"  * Valores por familia: {', '.join(map(str, rmr_values))}\n"
+                    prompt += f"  * Promedio: {round(sum(rmr_values)/len(rmr_values), 2)}\n"
+                    prompt += f"  * Rango: {min(rmr_values)} a {max(rmr_values)}\n"
+                    
+                    # Clasificación RMR basada en promedio
+                    rmr_avg = sum(rmr_values)/len(rmr_values)
+                    if rmr_avg >= 81:
+                        rmr_class = "Clase I - Muy buena calidad"
+                    elif rmr_avg >= 61:
+                        rmr_class = "Clase II - Buena calidad"
+                    elif rmr_avg >= 41:
+                        rmr_class = "Clase III - Calidad media"
+                    elif rmr_avg >= 21:
+                        rmr_class = "Clase IV - Mala calidad"
+                    else:
+                        rmr_class = "Clase V - Muy mala calidad"
+                    prompt += f"  * Clasificación: {rmr_class}\n"
+                
+                # Estadísticas SMR
+                smr_values = []
+                if afloramiento_data.get('datosFilas'):
+                    for fila in afloramiento_data['datosFilas']:
+                        if fila and 'smr' in fila and fila['smr'] is not None:
+                            smr_values.append(fila['smr'])
+                
+                if smr_values:
+                    prompt += f"- SMR (Slope Mass Rating):\n"
+                    prompt += f"  * Valores por familia: {', '.join(map(str, smr_values))}\n"
+                    prompt += f"  * Promedio: {round(sum(smr_values)/len(smr_values), 2)}\n"
+                    prompt += f"  * Rango: {min(smr_values)} a {max(smr_values)}\n"
+                    
+                    # Clasificación SMR basada en promedio
+                    smr_avg = sum(smr_values)/len(smr_values)
+                    if smr_avg >= 81:
+                        smr_class = "Clase I - Muy estable"
+                    elif smr_avg >= 61:
+                        smr_class = "Clase II - Estable"
+                    elif smr_avg >= 41:
+                        smr_class = "Clase III - Parcialmente estable"
+                    elif smr_avg >= 21:
+                        smr_class = "Clase IV - Inestable"
+                    else:
+                        smr_class = "Clase V - Muy inestable"
+                    prompt += f"  * Clasificación de estabilidad: {smr_class}\n"
+            
+            prompt += "\n"
 
-        prompt += "Redacta una sección de discusión en estilo técnico y académico, de aproximadamente 2 o 3 párrafos."
+        prompt += (
+            "Desarrolla una discusión técnica que integre los siguientes aspectos:\n"
+            "1. Relación entre las características petrográficas, tipo de roca y su origen geológico\n"
+            "2. Evaluación de la calidad del macizo rocoso basada en los índices RMR y su variabilidad\n"
+            "3. Análisis de estabilidad de taludes mediante el índice SMR, considerando los factores de ajuste\n"
+            "4. Interpretación de los patrones estructurales observados y su influencia en la calidad del macizo\n"
+            "5. Correlaciones entre los diferentes afloramientos y su significado geológico\n"
+            "6. Implicaciones para la ingeniería geológica y posibles riesgos identificados\n\n"
+            "El texto debe ser fluido, técnico pero claro, con un enfoque interpretativo. "
+            "Utiliza conectores adecuados para mantener la coherencia y evita listados numerados. "
+            "Destaca las relaciones más relevantes entre los parámetros analizados."
+        )
 
-        logger.info("Generando discusión técnica...")
+        logger.info("Generando discusión técnica con análisis RMR/SMR...")
         response = model.generate_content(prompt)
         
         if not response.text:
@@ -261,16 +366,48 @@ def generar_conclusiones(bloques, model):
             raise ValueError("La lista de bloques está vacía")
             
         prompt = (
-            "Con base en los datos de afloramientos y rocas que se describen a continuación, redacta una sección de *Conclusiones* "
-            "sintética, clara y técnica. Incluye entre 3 y 5 conclusiones numeradas.\n\n"
+            "Como geólogo senior, sintetiza las principales conclusiones técnicas derivadas del estudio de los siguientes afloramientos rocosos. "
+            "Presenta entre 4 y 6 conclusiones numeradas, cada una como un párrafo breve (2-3 oraciones). "
+            "Las conclusiones deben ser específicas, basadas en evidencia y relevantes para la caracterización geotécnica.\n\n"
+            "Datos resumidos:\n\n"
         )
         
-        for bloque in bloques:
-            prompt += f"Afloramiento {bloque.get('id', 'N/A')} - Calidad: {bloque.get('calidad', 'N/A')} | "
-            prompt += f"Tipo de roca: {bloque.get('roca', 'N/A')} | "
-            prompt += f"Familias: {len(bloque.get('familias', []))}\n"
+        tipos_roca = []
+        calidades = []
+        num_familias = []
+        
+        for i, bloque in enumerate(bloques, 1):
+            # Extraer datos del formulario
+            tipo_roca = bloque.get(f'tipo_roca_{i}', 'N/A')
+            roca = bloque.get(f'roca_{i}', 'N/A')
+            calidad = bloque.get(f'calidad_{i}', 'N/A')
+            
+            # Contar familias de discontinuidades
+            familias = [k for k in bloque.keys() if k.startswith(f'tabla-{i}-')]
+            
+            tipos_roca.append(tipo_roca)
+            calidades.append(calidad)
+            num_familias.append(len(familias))
+            
+            prompt += f"Afloramiento {i}: {tipo_roca} ({roca}), "
+            prompt += f"Calidad {calidad}, {len(familias)} familias\n"
 
-        prompt += "\nRedacta las conclusiones usando viñetas o numeración clara."
+        # Análisis agregado para las conclusiones
+        prompt += "\nResumen estadístico:\n"
+        prompt += f"- Tipos de roca predominantes: {', '.join(set(t for t in tipos_roca if t != 'N/A'))}\n"
+        prompt += f"- Distribución de calidades: {', '.join(calidades)}\n"
+        prompt += f"- Promedio de familias por afloramiento: {sum(num_familias)/len(num_familias):.1f}\n\n"
+        
+        prompt += (
+            "Redacta conclusiones que cubran:\n"
+            "1. Composición litológica predominante\n"
+            "2. Calidad general del macizo rocoso\n"
+            "3. Características estructurales relevantes\n"
+            "4. Implicaciones geotécnicas principales\n"
+            "5. Recomendaciones para estudios complementarios\n"
+            "6. Correlaciones geológicas significativas\n"
+            "Cada conclusión debe ser concisa pero sustancial, basada en los datos presentados."
+        )
 
         logger.info("Generando conclusiones...")
         response = model.generate_content(prompt)
