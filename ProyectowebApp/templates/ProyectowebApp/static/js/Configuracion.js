@@ -30,23 +30,20 @@ function getCookie(name) {
       document.getElementById(seccionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    window.onload = () => {
-      mostrarSeccion('datos');
-      if (!sessionStorage.getItem("reiniciado")) {
-        if (!confirm("¿Deseas reiniciar la página?")) return;
-        sessionStorage.setItem("reiniciado", "true");
-      }
+window.onload = () => {
+  mostrarSeccion('datos');
+    if (!sessionStorage.getItem("reiniciado")) {
+    if (!confirm("¿Deseas reiniciar la página?")) return;
+      sessionStorage.setItem("reiniciado", "true");}
 
-      ["btn-esclerometro", "btn-validacion", "btn-triaxial", "btn-smr"].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) {
-          btn.addEventListener("click", function (event) {
-            const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
-            if (!salir) event.preventDefault();
-          });
-        }
-      });
-    };
+    ["btn-esclerometro", "btn-validacion", "btn-triaxial", "btn-smr"].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.addEventListener("click", function (event) {
+          const salir = confirm("¿Deseas salir de la página de edición? Los datos no guardados se perderán.");
+          if (!salir) event.preventDefault();
+        });}
+ });};
 
    function actualizarBarraSecundaria(seccionId) {
       const barraSecundaria = document.getElementById('barra-secundaria');
