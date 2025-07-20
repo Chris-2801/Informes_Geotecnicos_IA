@@ -129,12 +129,8 @@ DEBUG = True
 # Static files (CSS, JavaScript, Images)
 
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'ProyectowebApp/static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Agregar la carpeta 'static' de tu app ProyectowebApp
-STATICFILES_DIRS = [
-    BASE_DIR / 'ProyectowebApp' / 'static',
-]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
